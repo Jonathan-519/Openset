@@ -1,0 +1,239 @@
+{
+  "known_species": {
+    "Amphipoda/Themisto_gracilipes": {
+      "label": 0,
+      "total": 47,
+      "train": 34,
+      "val": 4,
+      "test": 9
+    },
+    "Appendiculata/Oikopleura": {
+      "label": 1,
+      "total": 103,
+      "train": 73,
+      "val": 10,
+      "test": 20
+    },
+    "Cladocera/Evadne_tergestina": {
+      "label": 2,
+      "total": 99,
+      "train": 71,
+      "val": 9,
+      "test": 19
+    },
+    "Cladocera/Penilia_avirostris": {
+      "label": 3,
+      "total": 157,
+      "train": 111,
+      "val": 15,
+      "test": 31
+    },
+    "Copepoda/Acartia_hongi": {
+      "label": 4,
+      "total": 196,
+      "train": 138,
+      "val": 19,
+      "test": 39
+    },
+    "Copepoda/Calanopia_thompsoni": {
+      "label": 5,
+      "total": 10,
+      "train": 7,
+      "val": 1,
+      "test": 2
+    },
+    "Copepoda/Calanus_sinicus": {
+      "label": 6,
+      "total": 173,
+      "train": 122,
+      "val": 17,
+      "test": 34
+    },
+    "Copepoda/Centropages_dorsispinatus": {
+      "label": 7,
+      "total": 63,
+      "train": 45,
+      "val": 6,
+      "test": 12
+    },
+    "Copepoda/Eurytemora_pacifica": {
+      "label": 8,
+      "total": 22,
+      "train": 16,
+      "val": 2,
+      "test": 4
+    },
+    "Copepoda/Oithona_similis": {
+      "label": 9,
+      "total": 91,
+      "train": 64,
+      "val": 9,
+      "test": 18
+    },
+    "Copepoda/Paracalanus_parvus": {
+      "label": 10,
+      "total": 129,
+      "train": 92,
+      "val": 12,
+      "test": 25
+    },
+    "Copepoda/Pontellopsis_tenuicauda": {
+      "label": 11,
+      "total": 10,
+      "train": 7,
+      "val": 1,
+      "test": 2
+    },
+    "Copepoda/Pseudodiaptomus_marinus": {
+      "label": 12,
+      "total": 56,
+      "train": 40,
+      "val": 5,
+      "test": 11
+    },
+    "Euphausiacea/Euphausia_pacifica": {
+      "label": 13,
+      "total": 189,
+      "train": 134,
+      "val": 18,
+      "test": 37
+    },
+    "Medusae/Aurelia_aurita": {
+      "label": 14,
+      "total": 10,
+      "train": 7,
+      "val": 1,
+      "test": 2
+    },
+    "Medusae/Bougainvillia_muscus": {
+      "label": 15,
+      "total": 36,
+      "train": 26,
+      "val": 3,
+      "test": 7
+    },
+    "Medusae/Clytia_folleata": {
+      "label": 16,
+      "total": 47,
+      "train": 34,
+      "val": 4,
+      "test": 9
+    },
+    "Medusae/Dipurena_ophiogaeter": {
+      "label": 17,
+      "total": 69,
+      "train": 50,
+      "val": 6,
+      "test": 13
+    },
+    "Medusae/Eirene": {
+      "label": 18,
+      "total": 131,
+      "train": 92,
+      "val": 13,
+      "test": 26
+    },
+    "Medusae/Muggiaea_atlantica": {
+      "label": 19,
+      "total": 210,
+      "train": 147,
+      "val": 21,
+      "test": 42
+    },
+    "Medusae/Obelia_dichotoma": {
+      "label": 20,
+      "total": 61,
+      "train": 43,
+      "val": 6,
+      "test": 12
+    },
+    "Medusae/Proboscidactyla_flavicirrata": {
+      "label": 21,
+      "total": 49,
+      "train": 36,
+      "val": 4,
+      "test": 9
+    },
+    "Sagittoidea/Sagitta": {
+      "label": 22,
+      "total": 341,
+      "train": 239,
+      "val": 34,
+      "test": 68
+    }
+  },
+  "near_unknown_dev": {
+    "Copepoda/Acartia_pacifica": {
+      "parent_id": 3,
+      "images": 68
+    },
+    "Copepoda/Centropages_tenuiremis": {
+      "parent_id": 3,
+      "images": 74
+    },
+    "Medusae/Sugiura_chengshanense": {
+      "parent_id": 5,
+      "images": 8
+    },
+    "Medusae/Zanclea_costata": {
+      "parent_id": 5,
+      "images": 17
+    }
+  },
+  "near_unknown_test": {
+    "Copepoda/Corycaeus_affinis": {
+      "parent_id": 3,
+      "images": 19
+    },
+    "Copepoda/Oithona_plumifera": {
+      "parent_id": 3,
+      "images": 32
+    },
+    "Copepoda/Tortanus_derjugini": {
+      "parent_id": 3,
+      "images": 30
+    },
+    "Medusae/Gonionemus_vertens": {
+      "parent_id": 5,
+      "images": 9
+    },
+    "Medusae/Turritopsis_nutricula": {
+      "parent_id": 5,
+      "images": 114
+    }
+  },
+  "ood_dev": {
+    "Alima_larva": {
+      "images": 39
+    },
+    "Brachyura_zoea_larva": {
+      "images": 69
+    },
+    "Polychaeta_larva": {
+      "images": 53
+    },
+    "Tornaria_larva": {
+      "images": 54
+    }
+  },
+  "ood_test": {
+    "Enteromorphaprolifra": {
+      "images": 17
+    },
+    "Fish_eggs": {
+      "images": 26
+    },
+    "Fish_larva": {
+      "images": 41
+    },
+    "Megalopa_larva": {
+      "images": 82
+    },
+    "Ophioplutues_larva": {
+      "images": 47
+    },
+    "Porcellana_zoea_larva": {
+      "images": 59
+    }
+  }
+}

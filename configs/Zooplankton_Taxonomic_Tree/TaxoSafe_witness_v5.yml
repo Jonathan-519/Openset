@@ -1,0 +1,14 @@
+method: TaxoSafe-Witness-v5
+classifier: frozen_v4_identity
+primary_variant: full
+variants: [identity, global_only, no_coherence, no_sibling, full]
+projection_dim: 64
+projection_seed: 105
+witnesses: 3
+support_per_leaf: 48
+query_per_leaf: 24
+regularizers: [0.01, 0.1, 1.0]
+known_retention: 0.9
+calibration_fraction: 0.5
+threads: 4
+protocol: development_only_existing_test_previously_inspected

@@ -1,0 +1,42 @@
+{
+  "known_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_TT",
+  "near_dev_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_NearUnknown_Dev",
+  "near_test_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_NearUnknown_Test",
+  "ood_dev_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_OOD_Dev",
+  "ood_test_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_OOD_Test",
+  "locked_near_test": {
+    "Copepoda": [
+      "Corycaeus_affinis",
+      "Oithona_plumifera",
+      "Tortanus_derjugini"
+    ],
+    "Medusae": [
+      "Gonionemus_vertens",
+      "Turritopsis_nutricula"
+    ]
+  },
+  "dev_near_unknown": {
+    "Copepoda": [
+      "Acartia_pacifica",
+      "Centropages_tenuiremis"
+    ],
+    "Medusae": [
+      "Sugiura_chengshanense",
+      "Zanclea_costata"
+    ]
+  },
+  "dev_ood_classes": [
+    "Alima_larva",
+    "Brachyura_zoea_larva",
+    "Polychaeta_larva",
+    "Tornaria_larva"
+  ],
+  "test_ood_classes": [
+    "Enteromorphaprolifra",
+    "Fish_eggs",
+    "Fish_larva",
+    "Megalopa_larva",
+    "Ophioplutues_larva",
+    "Porcellana_zoea_larva"
+  ]
+}

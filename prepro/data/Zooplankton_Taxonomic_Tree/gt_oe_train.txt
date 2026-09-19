@@ -1,0 +1,13 @@
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_01.jpg,-1,0
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_02.jpg,-1,1
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_03.jpg,-1,2
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_04.jpg,-1,3
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_05.jpg,-1,4
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_06.jpg,-1,5
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_07.jpg,-1,6
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_08.jpg,-1,7
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_09.jpg,-1,8
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_10.jpg,-1,9
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_11.jpg,-1,10
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_12.jpg,-1,11
+prepro/raw/Zooplankton_OOD/oe_train/Bubbles_13.jpg,-1,12

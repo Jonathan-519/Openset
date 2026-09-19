@@ -1,0 +1,1081 @@
+{
+  "confidence_intervals_95": {
+    "deepest_reliable_taxon_accuracy": {
+      "high": 0.6826064295255012,
+      "low": 0.6214195647168907,
+      "method": "wilson_95",
+      "successes": 605,
+      "total": 927
+    },
+    "extra_false_parent_acceptance_rate": {
+      "high": 0.42642027512648534,
+      "low": 0.31256022364327246,
+      "method": "wilson_95",
+      "successes": 100,
+      "total": 272
+    },
+    "extra_global_unknown_recall": {
+      "high": 0.6874397763567276,
+      "low": 0.5735797248735147,
+      "method": "wilson_95",
+      "successes": 172,
+      "total": 272
+    },
+    "intra_correct_fallback_rate": {
+      "high": 0.6955030358310752,
+      "low": 0.5643103830430969,
+      "method": "wilson_95",
+      "successes": 129,
+      "total": 204
+    },
+    "intra_over_specification_error_rate": {
+      "high": 0.32402655765511396,
+      "low": 0.2044602006843515,
+      "method": "wilson_95",
+      "successes": 53,
+      "total": 204
+    },
+    "known_end_to_end_leaf_accuracy": {
+      "high": 0.7156888462196477,
+      "low": 0.629486372431412,
+      "method": "wilson_95",
+      "successes": 304,
+      "total": 451
+    },
+    "open_world_accepted_leaf_precision": {
+      "high": 0.7974416647790771,
+      "low": 0.713869604088969,
+      "method": "wilson_95",
+      "successes": 304,
+      "total": 401
+    }
+  },
+  "extra": {
+    "accepted_parent_distribution": {
+      "Amphipoda": 19,
+      "Appendiculata": 13,
+      "Cladocera": 5,
+      "Copepoda": 34,
+      "Euphausiacea": 13,
+      "Medusae": 12,
+      "Sagittoidea": 4
+    },
+    "aupr": 0.9108717835353718,
+    "auroc": 0.8525791423439604,
+    "candidate_parent_distribution": {
+      "Amphipoda": 44,
+      "Appendiculata": 43,
+      "Cladocera": 34,
+      "Copepoda": 63,
+      "Euphausiacea": 44,
+      "Medusae": 35,
+      "Sagittoidea": 9
+    },
+    "false_known_leaf_rate": 0.125,
+    "false_parent_acceptance_rate": 0.36764705882352944,
+    "fpr95": 0.6470588235294118,
+    "global_unknown_recall": 0.6323529411764706,
+    "sample_count": 272
+  },
+  "intra": {
+    "accepted_wrong_parent_rate": 0.014705882352941176,
+    "correct_fallback_rate": 0.6323529411764706,
+    "intra_global_rejection_rate": 0.10784313725490197,
+    "over_specification_error_rate": 0.25980392156862747,
+    "parent_localization_accuracy": 0.9411764705882353,
+    "sample_count": 204,
+    "wrong_parent_rate": 0.058823529411764705
+  },
+  "known": {
+    "accepted_correct_leaf_count": 304,
+    "accepted_leaf_count": 314,
+    "accepted_leaf_precision": 0.9681528662420382,
+    "balanced_accuracy": 0.8983041833469321,
+    "branch_restricted_leaf_accuracy": 0.9135254988913526,
+    "closed_hca": 0.9002217294900222,
+    "end_to_end_leaf_accuracy": 0.6740576496674058,
+    "global_leaf_accuracy": 0.917960088691796,
+    "known_global_rejection_rate": 0.1197339246119734,
+    "known_leaf_coverage": 0.6962305986696231,
+    "macro_f1": 0.8871148898502225,
+    "parent_accuracy": 0.9645232815964523,
+    "sample_count": 451,
+    "under_specification_rate": 0.18403547671840353
+  },
+  "metadata": {
+    "calibration_constraint_violations": {
+      "child_coverage": [],
+      "child_risk": [
+        "Amphipoda",
+        "Appendiculata",
+        "Cladocera",
+        "Copepoda",
+        "Euphausiacea",
+        "Medusae",
+        "Sagittoidea"
+      ],
+      "root_coverage": [],
+      "root_risk": [
+        "Amphipoda",
+        "Appendiculata",
+        "Cladocera",
+        "Copepoda",
+        "Euphausiacea",
+        "Medusae",
+        "Sagittoidea"
+      ]
+    },
+    "calibration_schema_version": 3,
+    "calibration_selection_policy": "balanced",
+    "calibration_validation_operating_point": {
+      "deepest_reliable_taxon_accuracy": 0.632890365448505,
+      "extra_count": 215,
+      "extra_false_parent_acceptance_rate": 0.26046511627906976,
+      "intra_correct_fallback_rate": 0.4491017964071856,
+      "intra_count": 167,
+      "intra_over_specification_rate": 0.40718562874251496,
+      "known_count": 220,
+      "known_end_to_end_leaf_accuracy": 0.6681818181818182,
+      "known_leaf_coverage": 0.6954545454545454
+    },
+    "checkpoint": "/home/ubuntu/hdd/data/qz/Openset/runs/Zooplankton_TaxoSafe_v9_rebuild/maple/ViT-B_16/full/TaxoSafe-v9-rebuild/trial_1/ckpt/best.pth",
+    "checkpoint_sha256": "26f2c64240b991c5784c072da0b6dfcd00119d7518209eb592c844611c4c4d5e",
+    "child_score_name": "standardized_weighted_ensemble",
+    "rate_unit": "fraction_in_[0,1]",
+    "risk_violation_override_used": true,
+    "root_score_name": "parent_msp",
+    "test_splits": [
+      "test_known",
+      "test_intra",
+      "test_extra"
+    ],
+    "thresholds": "/home/ubuntu/hdd/data/qz/Openset/runs/Zooplankton_TaxoSafe_v9_rebuild/maple/ViT-B_16/full/TaxoSafe-v9-rebuild/trial_1/calibration/thresholds.json"
+  },
+  "near_open_set": {
+    "aupr_known": 0.9057200660062241,
+    "aupr_unknown": 0.5972290569191325,
+    "auroc": 0.7891830789965654,
+    "ccr_at_fpr": {
+      "0.01": 0.3991130820399113,
+      "0.05": 0.4678492239467849,
+      "0.1": 0.5299334811529933
+    },
+    "fpr95": 0.7892156862745098,
+    "oscr": 0.7409188730924743,
+    "score": "local_known_margin"
+  },
+  "open_set_hierarchical_risk_specificity_curve": [
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -2.0
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -1.9
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -1.8
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -1.7
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -1.6
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -1.5
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.29341963322545844,
+      "normalized_specificity": 0.0,
+      "over_specification_risk": 0.0,
+      "threshold_shift": -1.4
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.447680690399137,
+      "normalized_specificity": 0.20388349514563106,
+      "over_specification_risk": 0.03361344537815126,
+      "threshold_shift": -1.2999999999999998
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.4854368932038835,
+      "normalized_specificity": 0.28748651564185546,
+      "over_specification_risk": 0.06512605042016807,
+      "threshold_shift": -1.2
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.4919093851132686,
+      "normalized_specificity": 0.3284789644012945,
+      "over_specification_risk": 0.10294117647058823,
+      "threshold_shift": -1.1
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5048543689320388,
+      "normalized_specificity": 0.3522114347357066,
+      "over_specification_risk": 0.12184873949579832,
+      "threshold_shift": -1.0
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5199568500539374,
+      "normalized_specificity": 0.3807982740021575,
+      "over_specification_risk": 0.15126050420168066,
+      "threshold_shift": -0.8999999999999999
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5436893203883495,
+      "normalized_specificity": 0.4077669902912621,
+      "over_specification_risk": 0.16806722689075632,
+      "threshold_shift": -0.7999999999999998
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5663430420711975,
+      "normalized_specificity": 0.4341963322545847,
+      "over_specification_risk": 0.18487394957983194,
+      "threshold_shift": -0.7
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5836030204962244,
+      "normalized_specificity": 0.45792880258899676,
+      "over_specification_risk": 0.20378151260504201,
+      "threshold_shift": -0.5999999999999999
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5943905070118662,
+      "normalized_specificity": 0.4773462783171521,
+      "over_specification_risk": 0.22058823529411764,
+      "threshold_shift": -0.5
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6116504854368932,
+      "normalized_specificity": 0.4962243797195254,
+      "over_specification_risk": 0.23319327731092437,
+      "threshold_shift": -0.3999999999999999
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6213592233009708,
+      "normalized_specificity": 0.52319309600863,
+      "over_specification_risk": 0.2668067226890756,
+      "threshold_shift": -0.2999999999999998
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6289104638619202,
+      "normalized_specificity": 0.5480043149946062,
+      "over_specification_risk": 0.29411764705882354,
+      "threshold_shift": -0.19999999999999996
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6418554476806904,
+      "normalized_specificity": 0.5668824163969794,
+      "over_specification_risk": 0.3088235294117647,
+      "threshold_shift": -0.09999999999999987
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6526429341963322,
+      "normalized_specificity": 0.5825242718446602,
+      "over_specification_risk": 0.32142857142857145,
+      "threshold_shift": 0.0
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6494066882416397,
+      "normalized_specificity": 0.6008629989212514,
+      "over_specification_risk": 0.35084033613445376,
+      "threshold_shift": 0.10000000000000009
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6591154261057174,
+      "normalized_specificity": 0.6202804746494067,
+      "over_specification_risk": 0.36764705882352944,
+      "threshold_shift": 0.20000000000000018
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.668824163969795,
+      "normalized_specificity": 0.6375404530744336,
+      "over_specification_risk": 0.3802521008403361,
+      "threshold_shift": 0.30000000000000027
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6645091693635383,
+      "normalized_specificity": 0.6526429341963322,
+      "over_specification_risk": 0.4012605042016807,
+      "threshold_shift": 0.40000000000000036
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6634304207119741,
+      "normalized_specificity": 0.6699029126213593,
+      "over_specification_risk": 0.4222689075630252,
+      "threshold_shift": 0.5
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6601941747572816,
+      "normalized_specificity": 0.6817691477885652,
+      "over_specification_risk": 0.4411764705882353,
+      "threshold_shift": 0.6000000000000001
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6612729234088457,
+      "normalized_specificity": 0.692017259978425,
+      "over_specification_risk": 0.45168067226890757,
+      "threshold_shift": 0.7000000000000002
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6558791801510249,
+      "normalized_specificity": 0.7044228694714132,
+      "over_specification_risk": 0.47058823529411764,
+      "threshold_shift": 0.8000000000000003
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6472491909385113,
+      "normalized_specificity": 0.7200647249190939,
+      "over_specification_risk": 0.49789915966386555,
+      "threshold_shift": 0.9000000000000004
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.639697950377562,
+      "normalized_specificity": 0.7308522114347357,
+      "over_specification_risk": 0.5168067226890757,
+      "threshold_shift": 1.0
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6353829557713053,
+      "normalized_specificity": 0.7378640776699029,
+      "over_specification_risk": 0.5252100840336135,
+      "threshold_shift": 1.1
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6267529665587918,
+      "normalized_specificity": 0.7545846817691478,
+      "over_specification_risk": 0.5525210084033614,
+      "threshold_shift": 1.2000000000000002
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6267529665587918,
+      "normalized_specificity": 0.7686084142394822,
+      "over_specification_risk": 0.5672268907563025,
+      "threshold_shift": 1.3000000000000003
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6213592233009708,
+      "normalized_specificity": 0.7766990291262136,
+      "over_specification_risk": 0.5819327731092437,
+      "threshold_shift": 1.4000000000000004
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6148867313915858,
+      "normalized_specificity": 0.7837108953613808,
+      "over_specification_risk": 0.5966386554621849,
+      "threshold_shift": 1.5
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6105717367853291,
+      "normalized_specificity": 0.7923408845738943,
+      "over_specification_risk": 0.6092436974789915,
+      "threshold_shift": 1.6
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.6019417475728155,
+      "normalized_specificity": 0.8047464940668824,
+      "over_specification_risk": 0.6323529411764706,
+      "threshold_shift": 1.7000000000000002
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5965480043149946,
+      "normalized_specificity": 0.8171521035598706,
+      "over_specification_risk": 0.6533613445378151,
+      "threshold_shift": 1.8000000000000003
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5868392664509169,
+      "normalized_specificity": 0.825782092772384,
+      "over_specification_risk": 0.6722689075630253,
+      "threshold_shift": 1.9000000000000004
+    },
+    {
+      "deepest_reliable_taxon_accuracy": 0.5836030204962244,
+      "normalized_specificity": 0.8322545846817692,
+      "over_specification_risk": 0.6827731092436975,
+      "threshold_shift": 2.0
+    }
+  ],
+  "overall": {
+    "accepted_leaf_count": 401,
+    "correct_count": 605,
+    "correct_leaf_count": 304,
+    "deepest_reliable_taxon_accuracy": 0.6526429341963322,
+    "macro_deepest_reliable_taxon_accuracy": 0.646254510673449,
+    "mean_prediction_depth": 1.1650485436893203,
+    "normalized_specificity": 0.5825242718446602,
+    "open_world_accepted_leaf_precision": 0.7581047381546134,
+    "over_specification_risk": 0.32142857142857145,
+    "prediction_type_counts": {
+      "global_unknown": 248,
+      "intra_unknown": 278,
+      "known": 401
+    },
+    "rate_unit": "fraction_in_[0,1]",
+    "sample_count": 927,
+    "unknown_as_known_leaf_count": 87
+  },
+  "per_extra_source": {
+    "Enteromorphaprolifra": {
+      "accepted_parent_distribution": {
+        "Medusae": 5
+      },
+      "false_known_leaf_rate": 0.17647058823529413,
+      "false_parent_acceptance_rate": 0.29411764705882354,
+      "global_unknown_recall": 0.7058823529411765,
+      "prediction_type_counts": {
+        "global_unknown": 12,
+        "intra_unknown": 2,
+        "known": 3
+      },
+      "sample_count": 17
+    },
+    "Fish_eggs": {
+      "accepted_parent_distribution": {
+        "Cladocera": 2
+      },
+      "false_known_leaf_rate": 0.07692307692307693,
+      "false_parent_acceptance_rate": 0.07692307692307693,
+      "global_unknown_recall": 0.9230769230769231,
+      "prediction_type_counts": {
+        "global_unknown": 24,
+        "known": 2
+      },
+      "sample_count": 26
+    },
+    "Fish_larva": {
+      "accepted_parent_distribution": {
+        "Appendiculata": 8,
+        "Euphausiacea": 7,
+        "Sagittoidea": 4
+      },
+      "false_known_leaf_rate": 0.07317073170731707,
+      "false_parent_acceptance_rate": 0.4634146341463415,
+      "global_unknown_recall": 0.5365853658536586,
+      "prediction_type_counts": {
+        "global_unknown": 22,
+        "intra_unknown": 16,
+        "known": 3
+      },
+      "sample_count": 41
+    },
+    "Megalopa_larva": {
+      "accepted_parent_distribution": {
+        "Amphipoda": 19,
+        "Copepoda": 2,
+        "Euphausiacea": 4,
+        "Medusae": 7
+      },
+      "false_known_leaf_rate": 0.2073170731707317,
+      "false_parent_acceptance_rate": 0.3902439024390244,
+      "global_unknown_recall": 0.6097560975609756,
+      "prediction_type_counts": {
+        "global_unknown": 50,
+        "intra_unknown": 15,
+        "known": 17
+      },
+      "sample_count": 82
+    },
+    "Ophioplutues_larva": {
+      "accepted_parent_distribution": {
+        "Cladocera": 1,
+        "Copepoda": 27
+      },
+      "false_known_leaf_rate": 0.1276595744680851,
+      "false_parent_acceptance_rate": 0.5957446808510638,
+      "global_unknown_recall": 0.40425531914893614,
+      "prediction_type_counts": {
+        "global_unknown": 19,
+        "intra_unknown": 22,
+        "known": 6
+      },
+      "sample_count": 47
+    },
+    "Porcellana_zoea_larva": {
+      "accepted_parent_distribution": {
+        "Appendiculata": 5,
+        "Cladocera": 2,
+        "Copepoda": 5,
+        "Euphausiacea": 2
+      },
+      "false_known_leaf_rate": 0.05084745762711865,
+      "false_parent_acceptance_rate": 0.23728813559322035,
+      "global_unknown_recall": 0.7627118644067796,
+      "prediction_type_counts": {
+        "global_unknown": 45,
+        "intra_unknown": 11,
+        "known": 3
+      },
+      "sample_count": 59
+    }
+  },
+  "per_intra_species": {
+    "Corycaeus_affinis": {
+      "accepted_wrong_parent_rate": 0.0,
+      "correct_fallback_rate": 0.2631578947368421,
+      "intra_global_rejection_rate": 0.3157894736842105,
+      "over_specification_error_rate": 0.42105263157894735,
+      "parent_localization_accuracy": 0.8947368421052632,
+      "sample_count": 19,
+      "wrong_parent_rate": 0.10526315789473684
+    },
+    "Gonionemus_vertens": {
+      "accepted_wrong_parent_rate": 0.0,
+      "correct_fallback_rate": 0.5555555555555556,
+      "intra_global_rejection_rate": 0.1111111111111111,
+      "over_specification_error_rate": 0.3333333333333333,
+      "parent_localization_accuracy": 1.0,
+      "sample_count": 9,
+      "wrong_parent_rate": 0.0
+    },
+    "Oithona_plumifera": {
+      "accepted_wrong_parent_rate": 0.09375,
+      "correct_fallback_rate": 0.34375,
+      "intra_global_rejection_rate": 0.34375,
+      "over_specification_error_rate": 0.3125,
+      "parent_localization_accuracy": 0.71875,
+      "sample_count": 32,
+      "wrong_parent_rate": 0.28125
+    },
+    "Tortanus_derjugini": {
+      "accepted_wrong_parent_rate": 0.0,
+      "correct_fallback_rate": 0.4,
+      "intra_global_rejection_rate": 0.03333333333333333,
+      "over_specification_error_rate": 0.5666666666666667,
+      "parent_localization_accuracy": 1.0,
+      "sample_count": 30,
+      "wrong_parent_rate": 0.0
+    },
+    "Turritopsis_nutricula": {
+      "accepted_wrong_parent_rate": 0.0,
+      "correct_fallback_rate": 0.8421052631578947,
+      "intra_global_rejection_rate": 0.02631578947368421,
+      "over_specification_error_rate": 0.13157894736842105,
+      "parent_localization_accuracy": 0.9912280701754386,
+      "sample_count": 114,
+      "wrong_parent_rate": 0.008771929824561403
+    }
+  },
+  "per_known_leaf": {
+    "Acartia hongi": {
+      "accepted_correct_leaf_count": 27,
+      "accepted_leaf_count": 30,
+      "accepted_leaf_precision": 0.9,
+      "balanced_accuracy": 0.8205128205128205,
+      "branch_restricted_leaf_accuracy": 0.8205128205128205,
+      "closed_hca": 0.8205128205128205,
+      "end_to_end_leaf_accuracy": 0.6923076923076923,
+      "global_leaf_accuracy": 0.8205128205128205,
+      "known_global_rejection_rate": 0.02564102564102564,
+      "known_leaf_coverage": 0.7692307692307693,
+      "macro_f1": 0.22535211267605634,
+      "parent_accuracy": 0.9487179487179487,
+      "sample_count": 39,
+      "under_specification_rate": 0.20512820512820512
+    },
+    "Aurelia aurita": {
+      "accepted_correct_leaf_count": 1,
+      "accepted_leaf_count": 1,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.5,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.5,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 2,
+      "under_specification_rate": 0.5
+    },
+    "Bougainvillia muscus": {
+      "accepted_correct_leaf_count": 7,
+      "accepted_leaf_count": 7,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 1.0,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 1.0,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 7,
+      "under_specification_rate": 0.0
+    },
+    "Calanopia thompsoni": {
+      "accepted_correct_leaf_count": 2,
+      "accepted_leaf_count": 2,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 1.0,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 1.0,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 2,
+      "under_specification_rate": 0.0
+    },
+    "Calanus sinicus": {
+      "accepted_correct_leaf_count": 20,
+      "accepted_leaf_count": 24,
+      "accepted_leaf_precision": 0.8333333333333334,
+      "balanced_accuracy": 0.7647058823529411,
+      "branch_restricted_leaf_accuracy": 0.7647058823529411,
+      "closed_hca": 0.7352941176470589,
+      "end_to_end_leaf_accuracy": 0.5882352941176471,
+      "global_leaf_accuracy": 0.7352941176470589,
+      "known_global_rejection_rate": 0.17647058823529413,
+      "known_leaf_coverage": 0.7058823529411765,
+      "macro_f1": 0.14444444444444443,
+      "parent_accuracy": 0.9411764705882353,
+      "sample_count": 34,
+      "under_specification_rate": 0.11764705882352941
+    },
+    "Centropages dorsispinatus": {
+      "accepted_correct_leaf_count": 10,
+      "accepted_leaf_count": 10,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.8333333333333334,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.08333333333333333,
+      "known_leaf_coverage": 0.8333333333333334,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 12,
+      "under_specification_rate": 0.08333333333333333
+    },
+    "Clytia folleata": {
+      "accepted_correct_leaf_count": 1,
+      "accepted_leaf_count": 1,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 0.7777777777777778,
+      "branch_restricted_leaf_accuracy": 0.7777777777777778,
+      "closed_hca": 0.7777777777777778,
+      "end_to_end_leaf_accuracy": 0.1111111111111111,
+      "global_leaf_accuracy": 0.7777777777777778,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.1111111111111111,
+      "macro_f1": 0.2916666666666667,
+      "parent_accuracy": 1.0,
+      "sample_count": 9,
+      "under_specification_rate": 0.8888888888888888
+    },
+    "Dipurena ophiogaeter": {
+      "accepted_correct_leaf_count": 11,
+      "accepted_leaf_count": 11,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.8461538461538461,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.8461538461538461,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 13,
+      "under_specification_rate": 0.15384615384615385
+    },
+    "Eirene": {
+      "accepted_correct_leaf_count": 22,
+      "accepted_leaf_count": 22,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.8461538461538461,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.8461538461538461,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 26,
+      "under_specification_rate": 0.15384615384615385
+    },
+    "Euphausia pacifica": {
+      "accepted_correct_leaf_count": 23,
+      "accepted_leaf_count": 23,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 0.9459459459459459,
+      "branch_restricted_leaf_accuracy": 0.9459459459459459,
+      "closed_hca": 0.918918918918919,
+      "end_to_end_leaf_accuracy": 0.6216216216216216,
+      "global_leaf_accuracy": 0.972972972972973,
+      "known_global_rejection_rate": 0.21621621621621623,
+      "known_leaf_coverage": 0.6216216216216216,
+      "macro_f1": 0.4861111111111111,
+      "parent_accuracy": 0.9459459459459459,
+      "sample_count": 37,
+      "under_specification_rate": 0.16216216216216217
+    },
+    "Eurytemora pacifica": {
+      "accepted_correct_leaf_count": 0,
+      "accepted_leaf_count": 0,
+      "accepted_leaf_precision": null,
+      "balanced_accuracy": 0.0,
+      "branch_restricted_leaf_accuracy": 0.0,
+      "closed_hca": 0.0,
+      "end_to_end_leaf_accuracy": 0.0,
+      "global_leaf_accuracy": 0.25,
+      "known_global_rejection_rate": 0.75,
+      "known_leaf_coverage": 0.0,
+      "macro_f1": 0.0,
+      "parent_accuracy": 0.5,
+      "sample_count": 4,
+      "under_specification_rate": 0.25
+    },
+    "Evadne tergestina": {
+      "accepted_correct_leaf_count": 10,
+      "accepted_leaf_count": 10,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 0.8947368421052632,
+      "branch_restricted_leaf_accuracy": 0.8947368421052632,
+      "closed_hca": 0.8421052631578947,
+      "end_to_end_leaf_accuracy": 0.5263157894736842,
+      "global_leaf_accuracy": 0.8947368421052632,
+      "known_global_rejection_rate": 0.3157894736842105,
+      "known_leaf_coverage": 0.5263157894736842,
+      "macro_f1": 0.4722222222222222,
+      "parent_accuracy": 0.8947368421052632,
+      "sample_count": 19,
+      "under_specification_rate": 0.15789473684210525
+    },
+    "Muggiaea atlantica": {
+      "accepted_correct_leaf_count": 24,
+      "accepted_leaf_count": 24,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 0.9285714285714286,
+      "branch_restricted_leaf_accuracy": 0.9285714285714286,
+      "closed_hca": 0.9285714285714286,
+      "end_to_end_leaf_accuracy": 0.5714285714285714,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.2857142857142857,
+      "known_leaf_coverage": 0.5714285714285714,
+      "macro_f1": 0.4814814814814815,
+      "parent_accuracy": 0.9285714285714286,
+      "sample_count": 42,
+      "under_specification_rate": 0.14285714285714285
+    },
+    "Obelia dichotoma": {
+      "accepted_correct_leaf_count": 11,
+      "accepted_leaf_count": 11,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.9166666666666666,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.9166666666666666,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 12,
+      "under_specification_rate": 0.08333333333333333
+    },
+    "Oikopleura": {
+      "accepted_correct_leaf_count": 10,
+      "accepted_leaf_count": 10,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.5,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.05,
+      "known_leaf_coverage": 0.5,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 20,
+      "under_specification_rate": 0.45
+    },
+    "Oithona similis": {
+      "accepted_correct_leaf_count": 10,
+      "accepted_leaf_count": 12,
+      "accepted_leaf_precision": 0.8333333333333334,
+      "balanced_accuracy": 0.7777777777777778,
+      "branch_restricted_leaf_accuracy": 0.7777777777777778,
+      "closed_hca": 0.7777777777777778,
+      "end_to_end_leaf_accuracy": 0.5555555555555556,
+      "global_leaf_accuracy": 0.7777777777777778,
+      "known_global_rejection_rate": 0.1111111111111111,
+      "known_leaf_coverage": 0.6666666666666666,
+      "macro_f1": 0.43750000000000006,
+      "parent_accuracy": 1.0,
+      "sample_count": 18,
+      "under_specification_rate": 0.2222222222222222
+    },
+    "Paracalanus parvus": {
+      "accepted_correct_leaf_count": 17,
+      "accepted_leaf_count": 18,
+      "accepted_leaf_precision": 0.9444444444444444,
+      "balanced_accuracy": 0.88,
+      "branch_restricted_leaf_accuracy": 0.88,
+      "closed_hca": 0.84,
+      "end_to_end_leaf_accuracy": 0.68,
+      "global_leaf_accuracy": 0.84,
+      "known_global_rejection_rate": 0.12,
+      "known_leaf_coverage": 0.72,
+      "macro_f1": 0.3120567375886525,
+      "parent_accuracy": 1.0,
+      "sample_count": 25,
+      "under_specification_rate": 0.16
+    },
+    "Penilia avirostris": {
+      "accepted_correct_leaf_count": 20,
+      "accepted_leaf_count": 20,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 0.8709677419354839,
+      "branch_restricted_leaf_accuracy": 0.8709677419354839,
+      "closed_hca": 0.8064516129032258,
+      "end_to_end_leaf_accuracy": 0.6451612903225806,
+      "global_leaf_accuracy": 0.8387096774193549,
+      "known_global_rejection_rate": 0.2903225806451613,
+      "known_leaf_coverage": 0.6451612903225806,
+      "macro_f1": 0.18620689655172412,
+      "parent_accuracy": 0.9032258064516129,
+      "sample_count": 31,
+      "under_specification_rate": 0.06451612903225806
+    },
+    "Pontellopsis tenuicauda": {
+      "accepted_correct_leaf_count": 0,
+      "accepted_leaf_count": 0,
+      "accepted_leaf_precision": null,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.0,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 1.0,
+      "known_leaf_coverage": 0.0,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 2,
+      "under_specification_rate": 0.0
+    },
+    "Proboscidactyla flavicirrata": {
+      "accepted_correct_leaf_count": 6,
+      "accepted_leaf_count": 6,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.6666666666666666,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.6666666666666666,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 9,
+      "under_specification_rate": 0.3333333333333333
+    },
+    "Pseudodiaptomus marinus": {
+      "accepted_correct_leaf_count": 11,
+      "accepted_leaf_count": 11,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 1.0,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 1.0,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 11,
+      "under_specification_rate": 0.0
+    },
+    "Sagitta": {
+      "accepted_correct_leaf_count": 54,
+      "accepted_leaf_count": 54,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.7941176470588235,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.7941176470588235,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 68,
+      "under_specification_rate": 0.20588235294117646
+    },
+    "Themisto gracilipes": {
+      "accepted_correct_leaf_count": 7,
+      "accepted_leaf_count": 7,
+      "accepted_leaf_precision": 1.0,
+      "balanced_accuracy": 1.0,
+      "branch_restricted_leaf_accuracy": 1.0,
+      "closed_hca": 1.0,
+      "end_to_end_leaf_accuracy": 0.7777777777777778,
+      "global_leaf_accuracy": 1.0,
+      "known_global_rejection_rate": 0.0,
+      "known_leaf_coverage": 0.7777777777777778,
+      "macro_f1": 1.0,
+      "parent_accuracy": 1.0,
+      "sample_count": 9,
+      "under_specification_rate": 0.2222222222222222
+    }
+  },
+  "per_parent": {
+    "intra": {
+      "Copepoda": {
+        "accepted_wrong_parent_rate": 0.037037037037037035,
+        "correct_fallback_rate": 0.345679012345679,
+        "intra_global_rejection_rate": 0.2222222222222222,
+        "over_specification_error_rate": 0.43209876543209874,
+        "parent_localization_accuracy": 0.8641975308641975,
+        "sample_count": 81,
+        "wrong_parent_rate": 0.13580246913580246
+      },
+      "Medusae": {
+        "accepted_wrong_parent_rate": 0.0,
+        "correct_fallback_rate": 0.8211382113821138,
+        "intra_global_rejection_rate": 0.032520325203252036,
+        "over_specification_error_rate": 0.14634146341463414,
+        "parent_localization_accuracy": 0.991869918699187,
+        "sample_count": 123,
+        "wrong_parent_rate": 0.008130081300813009
+      }
+    },
+    "known": {
+      "Amphipoda": {
+        "accepted_correct_leaf_count": 7,
+        "accepted_leaf_count": 7,
+        "accepted_leaf_precision": 1.0,
+        "balanced_accuracy": 1.0,
+        "branch_restricted_leaf_accuracy": 1.0,
+        "closed_hca": 1.0,
+        "end_to_end_leaf_accuracy": 0.7777777777777778,
+        "global_leaf_accuracy": 1.0,
+        "known_global_rejection_rate": 0.0,
+        "known_leaf_coverage": 0.7777777777777778,
+        "macro_f1": 1.0,
+        "parent_accuracy": 1.0,
+        "sample_count": 9,
+        "under_specification_rate": 0.2222222222222222
+      },
+      "Appendiculata": {
+        "accepted_correct_leaf_count": 10,
+        "accepted_leaf_count": 10,
+        "accepted_leaf_precision": 1.0,
+        "balanced_accuracy": 1.0,
+        "branch_restricted_leaf_accuracy": 1.0,
+        "closed_hca": 1.0,
+        "end_to_end_leaf_accuracy": 0.5,
+        "global_leaf_accuracy": 1.0,
+        "known_global_rejection_rate": 0.05,
+        "known_leaf_coverage": 0.5,
+        "macro_f1": 1.0,
+        "parent_accuracy": 1.0,
+        "sample_count": 20,
+        "under_specification_rate": 0.45
+      },
+      "Cladocera": {
+        "accepted_correct_leaf_count": 30,
+        "accepted_leaf_count": 30,
+        "accepted_leaf_precision": 1.0,
+        "balanced_accuracy": 0.8828522920203735,
+        "branch_restricted_leaf_accuracy": 0.88,
+        "closed_hca": 0.82,
+        "end_to_end_leaf_accuracy": 0.6,
+        "global_leaf_accuracy": 0.86,
+        "known_global_rejection_rate": 0.3,
+        "known_leaf_coverage": 0.6,
+        "macro_f1": 0.3699906803355079,
+        "parent_accuracy": 0.9,
+        "sample_count": 50,
+        "under_specification_rate": 0.1
+      },
+      "Copepoda": {
+        "accepted_correct_leaf_count": 97,
+        "accepted_leaf_count": 107,
+        "accepted_leaf_precision": 0.9065420560747663,
+        "balanced_accuracy": 0.804777386738171,
+        "branch_restricted_leaf_accuracy": 0.8231292517006803,
+        "closed_hca": 0.8095238095238095,
+        "end_to_end_leaf_accuracy": 0.6598639455782312,
+        "global_leaf_accuracy": 0.8163265306122449,
+        "known_global_rejection_rate": 0.12244897959183673,
+        "known_leaf_coverage": 0.7278911564625851,
+        "macro_f1": 0.6013826043237808,
+        "parent_accuracy": 0.9591836734693877,
+        "sample_count": 147,
+        "under_specification_rate": 0.14965986394557823
+      },
+      "Euphausiacea": {
+        "accepted_correct_leaf_count": 23,
+        "accepted_leaf_count": 23,
+        "accepted_leaf_precision": 1.0,
+        "balanced_accuracy": 0.9459459459459459,
+        "branch_restricted_leaf_accuracy": 0.9459459459459459,
+        "closed_hca": 0.918918918918919,
+        "end_to_end_leaf_accuracy": 0.6216216216216216,
+        "global_leaf_accuracy": 0.972972972972973,
+        "known_global_rejection_rate": 0.21621621621621623,
+        "known_leaf_coverage": 0.6216216216216216,
+        "macro_f1": 0.4861111111111111,
+        "parent_accuracy": 0.9459459459459459,
+        "sample_count": 37,
+        "under_specification_rate": 0.16216216216216217
+      },
+      "Medusae": {
+        "accepted_correct_leaf_count": 83,
+        "accepted_leaf_count": 83,
+        "accepted_leaf_precision": 1.0,
+        "balanced_accuracy": 0.9632936507936508,
+        "branch_restricted_leaf_accuracy": 0.9583333333333334,
+        "closed_hca": 0.9583333333333334,
+        "end_to_end_leaf_accuracy": 0.6916666666666667,
+        "global_leaf_accuracy": 0.9833333333333333,
+        "known_global_rejection_rate": 0.1,
+        "known_leaf_coverage": 0.6916666666666667,
+        "macro_f1": 0.8576294130387698,
+        "parent_accuracy": 0.975,
+        "sample_count": 120,
+        "under_specification_rate": 0.20833333333333334
+      },
+      "Sagittoidea": {
+        "accepted_correct_leaf_count": 54,
+        "accepted_leaf_count": 54,
+        "accepted_leaf_precision": 1.0,
+        "balanced_accuracy": 1.0,
+        "branch_restricted_leaf_accuracy": 1.0,
+        "closed_hca": 1.0,
+        "end_to_end_leaf_accuracy": 0.7941176470588235,
+        "global_leaf_accuracy": 1.0,
+        "known_global_rejection_rate": 0.0,
+        "known_leaf_coverage": 0.7941176470588235,
+        "macro_f1": 1.0,
+        "parent_accuracy": 1.0,
+        "sample_count": 68,
+        "under_specification_rate": 0.20588235294117646
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+# Point base_config at the ARCHIVED configuration of your clean-trained run
+# before building memory. --run-dir must contain that run's ckpt/best.pth.
+base_config: runs/Zooplankton_TaxoSafe_fold1_clean_v1/maple/ViT-B_16/full/TaxoSafe-v3-clean-v1/fold1/trial_1/TaxoSafe_clean_v1.yml
+require_archived_training_config: true
+visual_support:
+  seed: 41
+  max_memory_per_leaf: 256
+  child_k: 3
+  root_k: 10
+  query_chunk_size: 128
+  cache_scale: 20.0
+  routing_alphas: [0.0, 0.25, 0.50]
+  fit_fraction: 0.50
+  shrinkage_strength: 20.0
+  root_far_limit: 0.05
+  child_oser_limit: 0.05
+  root_id_rejection: 0.10
+  child_known_rejection: 0.10
+  primary_profile: coverage
+  residual:
+    enabled: true
+    seed: 41
+    folds: 2
+    alphas: [0.0, 0.5, 1.0]
+    ks: [1, 3]
+    radius_shrinkage: 10.0
+    local_scaling: true
