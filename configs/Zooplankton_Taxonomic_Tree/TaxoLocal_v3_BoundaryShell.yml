@@ -1,0 +1,70 @@
+name: TaxoLocal-v3-BoundaryShell
+seed: 1
+model:
+  arch: maple
+  name: ViT-B/16
+  prec: fp32
+  n_ctx: 2
+  ctx_init: a photo of a
+  prompt_depth: 3
+data:
+  name: Zooplankton_TaxoSafe_v9_rebuild
+  loader: TaxoSafeDataLoader
+  data_root: prepro/raw/Zooplankton_TT
+  near_test_root: prepro/raw/Zooplankton_NearUnknown_Test
+  ood_test_root: prepro/raw/Zooplankton_OOD_Test
+  full_data_root: prepro
+  ood_root: .
+  train: prepro/data/Zooplankton_BoundaryShell_v3/gt_train.txt
+  val_known: prepro/data/Zooplankton_BoundaryShell_v3/gt_val_known.txt
+  test_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt
+  test_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_intra.txt
+  test_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_extra.txt
+  hierarchy: prepro/data/Zooplankton_TT_v9_rebuild/tree.npy
+  num_known_leaves: 23
+  batch_size: 8
+  eval_batch_size: 16
+  n_workers: 4
+  transform: clip
+  sampler:
+    name: hierarchical_episode
+    parents_per_batch: 2
+    species_per_parent: 2
+    images_per_species: 2
+    batches_per_epoch: 200
+    seed: 1
+    ensure_rankable_parent: true
+    pseudo_holdout_mode: epoch
+    holdout_seed: 1
+protocol: v9_rebuild_exact_dedup_known_existing_test_development_comparison
+classifier:
+  epochs: 100
+  patience: 20
+  lr: 0.002
+  parent_weight: 0.2
+  morphology_weight: 0.05
+boundaryshell:
+  partition_seed: 1729
+  output_dim: 128
+  hidden_dim: 128
+  epochs: 30
+  lr: 0.001
+  batch_size: 256
+  support_quantile: 0.95
+  shrinkage: 20.0
+  min_radius: 0.03
+  neighborhood: taxonomy
+  neighbors: 3
+  shell_margin: 0.08
+  shell_noise: 0.15
+  shell_attempts: 4
+  min_synthetic: 16
+  reject_margin: 0.15
+  parent_weight: 0.2
+calibration:
+  target: 0.9
+  max_drop: 0.02
+  root_budget: 0.002
+source_known_manifests:
+  train: prepro/data/Zooplankton_TT_v9_rebuild/gt_train_known.txt
+  val_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_known.txt

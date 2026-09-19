@@ -1,0 +1,38 @@
+{
+  "base_commit": "52501c2b3125d28c17c64aff641538e339122da8",
+  "unit_tests": {
+    "passed": 11,
+    "failed": 0,
+    "command": "python -m unittest tests.test_boundaryshell_v3"
+  },
+  "checks": [
+    "Python compileall",
+    "bash -n",
+    "real known dataset loader: 23 classes, batch [16,3,224,224], num_workers=0",
+    "real MaPLe random-weight reduced-transformer forward/backward on CPU",
+    "synthetic open train/calibrate/test and file hash binding",
+    "cross-split exact image hash audit",
+    "result archive creation"
+  ],
+  "cuda_available": false,
+  "real_pretrained_training_completed": false,
+  "known_above_90_verified_on_real_test": false,
+  "python": "3.12.14",
+  "torch": "2.14.0+cpu",
+  "data_counts": {
+    "train": 1606,
+    "val_known": 223,
+    "test_known": 451,
+    "test_intra": 204,
+    "test_extra": 272
+  },
+  "selection_count": 107,
+  "calibration_count": 116,
+  "limitations": [
+    "No CUDA training or pretrained evaluation performed",
+    "Test dataset previously inspected; no blind-test claim",
+    "Exact hash checks do not remove perceptual near-duplicates",
+    "One within-test duplicate is retained",
+    "Generic benchmark adapters not included"
+  ]
+}
