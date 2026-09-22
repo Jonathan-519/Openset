@@ -1,0 +1,23 @@
+# Fixed development hypothesis. No parameters selected on the existing test set.
+method: TaxoSafe-HLE
+protocol: development_existing_test_previously_inspected
+primary_variant: full
+primary_profile: protected
+variants: [identity, full, no_local, no_orthogonal, no_open, shared]
+spatial_pool_side: 7
+adapter:
+  rank: 32
+  attention_temperature: 0.01
+  increment_bound: 0.5
+  distance_temperature: 0.1
+  epochs: 25
+  episodes_per_epoch: 100
+  support_per_leaf: 4
+  query_per_leaf: 4
+  lr: 0.001
+  weight_decay: 0.0001
+  open_margin: 0.2
+  open_weight: 0.5
+  compact_weight: 0.1
+  anchor_weight: 0.1
+query_chunk_size: 64

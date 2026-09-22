@@ -1,0 +1,84 @@
+{
+  "Amphipoda": {
+    "known": [
+      "Themisto_gracilipes"
+    ],
+    "val_novel": [],
+    "test_novel": [],
+    "supports_pseudo_unseen_training": false,
+    "supports_real_intra_unknown_evaluation": false
+  },
+  "Appendiculata": {
+    "known": [
+      "Oikopleura"
+    ],
+    "val_novel": [],
+    "test_novel": [],
+    "supports_pseudo_unseen_training": false,
+    "supports_real_intra_unknown_evaluation": false
+  },
+  "Cladocera": {
+    "known": [
+      "Evadne_tergestina",
+      "Penilia_avirostris"
+    ],
+    "val_novel": [],
+    "test_novel": [],
+    "supports_pseudo_unseen_training": true,
+    "supports_real_intra_unknown_evaluation": false
+  },
+  "Copepoda": {
+    "known": [
+      "Acartia_hongi",
+      "Calanus_sinicus",
+      "Centropages_dorsispinatus",
+      "Eurytemora_pacifica",
+      "Oithona_plumifera",
+      "Paracalanus_parvus"
+    ],
+    "val_novel": [
+      "Centropages_tenuiremis"
+    ],
+    "test_novel": [
+      "Acartia_pacifica",
+      "Oithona_similis"
+    ],
+    "supports_pseudo_unseen_training": true,
+    "supports_real_intra_unknown_evaluation": true
+  },
+  "Euphausiacea": {
+    "known": [
+      "Euphausia_pacifica"
+    ],
+    "val_novel": [],
+    "test_novel": [],
+    "supports_pseudo_unseen_training": false,
+    "supports_real_intra_unknown_evaluation": false
+  },
+  "Medusae": {
+    "known": [
+      "Clytia_folleata",
+      "Muggiaea_atlantica",
+      "Obelia_dichotoma",
+      "Proboscidactyla_flavicirrata",
+      "Sugiura_chengshanense"
+    ],
+    "val_novel": [
+      "Eirene"
+    ],
+    "test_novel": [
+      "Turritopsis_nutricula"
+    ],
+    "supports_pseudo_unseen_training": true,
+    "supports_real_intra_unknown_evaluation": true
+  },
+  "Sagittoidea": {
+    "known": [
+      "Sagitta"
+    ],
+    "val_novel": [],
+    "test_novel": [],
+    "supports_pseudo_unseen_training": false,
+    "supports_real_intra_unknown_evaluation": false
+  }
+}
