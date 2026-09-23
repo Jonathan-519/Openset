@@ -17,7 +17,7 @@ from prepro.build_known_view import PARENTS, build_known_view
 from tools import prepare_taxosafe as prepare
 from tools import run_taxosafe_suite as suite
 from taxosafe_visual import pipeline
-from test_taxosafe_residual import fixture
+from tests.test_taxosafe_residual import fixture
 
 
 class PreparationTests(unittest.TestCase):
@@ -61,10 +61,32 @@ class PreparationTests(unittest.TestCase):
 
 
 class SuiteTests(unittest.TestCase):
-    def new_plan(self, root, reuse=False, seed=None):
+    def synthetic_config(self, root):
+        """Build a self-contained config without relying on local datasets."""
         cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
         cfg["data"]["name"] = "SYNTHETIC_PROTOCOL_TEST"
         cfg["exp"] = "unit-test"
+        inputs = root / "inputs"
+        inputs.mkdir(parents=True, exist_ok=True)
+        for key in (
+            "train",
+            "val_known",
+            "val_intra",
+            "val_extra",
+            "test_known",
+            "test_intra",
+            "test_extra",
+        ):
+            path = inputs / (key + ".txt")
+            path.write_text("synthetic/{}.jpg,0,0\n".format(key))
+            cfg["data"][key] = str(path)
+        hierarchy = inputs / "tree.npy"
+        hierarchy.write_bytes(b"SYNTHETIC HIERARCHY; NOT A NUMPY ARRAY")
+        cfg["data"]["hierarchy"] = str(hierarchy)
+        return cfg
+
+    def new_plan(self, root, reuse=False, seed=None):
+        cfg = self.synthetic_config(root)
         source = root / "source.yml"
         run = None
         if reuse:
@@ -79,6 +101,48 @@ class SuiteTests(unittest.TestCase):
         suite.dump(suite.receipt_path(plan, step), {
             "plan_sha256": suite.file_hash(suite.resolve(plan["suite"]) / "plan.json"),
             "outputs_sha256": {p: suite.file_hash(suite.resolve(p)) for p in step["outputs"]}})
+
+    def test_disabled_oe_manifest_is_not_required_or_frozen(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cfg = self.synthetic_config(root)
+            missing = root / "missing_oe.txt"
+            cfg["data"]["oe_train"] = str(missing)
+            cfg["loss"]["lambda_oe"] = 0.0
+            source = root / "source.yml"
+            source.write_text(yaml.safe_dump(cfg))
+            plan = suite.make_plan(source, root / "suite")
+            self.assertFalse(missing.exists())
+            self.assertNotIn(str(missing.resolve()), plan["inputs_sha256"])
+
+    def test_enabled_oe_manifest_is_required_and_frozen(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cfg = self.synthetic_config(root)
+            cfg["loss"]["lambda_oe"] = 0.5
+
+            missing_source = root / "missing_source.yml"
+            missing_cfg = copy.deepcopy(cfg)
+            missing_cfg["data"].pop("oe_train", None)
+            missing_source.write_text(yaml.safe_dump(missing_cfg))
+            with self.assertRaisesRegex(
+                ValueError, "lambda_oe > 0 requires data.oe_train"
+            ):
+                suite.make_plan(
+                    missing_source, root / "missing_manifest_suite"
+                )
+
+            manifest = root / "oe_train.txt"
+            manifest.write_text("synthetic/ood.jpg,-1,0\n")
+            cfg["data"]["oe_train"] = str(manifest)
+            source = root / "source.yml"
+            source.write_text(yaml.safe_dump(cfg))
+            plan = suite.make_plan(source, root / "suite")
+            key = str(manifest.resolve())
+            self.assertIn(key, plan["inputs_sha256"])
+            self.assertEqual(
+                plan["inputs_sha256"][key], suite.file_hash(manifest)
+            )
 
     def test_seed_updates_model_sampler_and_holdout_and_variants_keep_root_fixed(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -114,7 +178,9 @@ class SuiteTests(unittest.TestCase):
             run = root / "run"
             (run / "ckpt").mkdir(parents=True)
             (run / "ckpt/best.pth").write_bytes(b"SYNTHETIC CHECKPOINT")
-            content = suite.resolve(suite.DEFAULT_CONFIG).read_text()
+            content = yaml.safe_dump(
+                self.synthetic_config(root), sort_keys=False
+            )
             original = b"\xef\xbb\xbf" + content.replace("\n", "\r\n").encode("utf-8")
             archive = run / "training.yml"
             archive.write_bytes(original)

@@ -1,0 +1,147 @@
+seed: 1
+name: TaxoSafe-v10-perf
+
+model:
+  arch: maple
+  name: ViT-B/16
+  prec: fp16
+  n_ctx: 2
+  ctx_init: "a photo of a"
+  prompt_depth: 3
+
+data:
+  name: Zooplankton_TaxoSafe_v10_perf
+  loader: TaxoSafeDataLoader
+  data_root: prepro/raw/Zooplankton_TT
+  near_dev_root: prepro/raw/Zooplankton_NearUnknown_Dev
+  near_test_root: prepro/raw/Zooplankton_NearUnknown_Test
+  ood_dev_root: prepro/raw/Zooplankton_OOD_Dev
+  ood_test_root: prepro/raw/Zooplankton_OOD_Test
+  oe_train_root: prepro/raw/Zooplankton_OOD_Dev
+  full_data_root: prepro
+  ood_root: .
+
+  train: prepro/data/Zooplankton_TT_v9_rebuild/gt_train_known.txt
+  val_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_known.txt
+  test_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt
+
+  # 60% of each development near-unknown species is gradient-training only.
+  train_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_train_intra_v10.txt
+  # Remaining 40% is held out for router calibration.
+  val_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra_v10.txt
+  test_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_intra.txt
+
+  # 60% of each development OOD source is used as OE only.
+  oe_train: prepro/data/Zooplankton_TT_v9_rebuild/gt_oe_train_v10.txt
+  # Remaining 40% is held out for root-gate calibration.
+  val_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra_v10.txt
+  test_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_extra.txt
+
+  hierarchy: prepro/data/Zooplankton_TT_v9_rebuild/tree.npy
+  num_known_leaves: 23
+  batch_size: 12
+  eval_batch_size: 16
+  n_workers: 4
+  transform: clip
+
+  sampler:
+    name: hierarchical_episode
+    parents_per_batch: 2
+    species_per_parent: 3
+    images_per_species: 2
+    batches_per_epoch: 240
+    seed: 1
+    ensure_rankable_parent: true
+    pseudo_holdout_mode: epoch
+    holdout_seed: 1
+    hard_sibling_sampling: true
+
+init_label_set: leaf
+
+open_treecut:
+  holdout_mode: epoch
+  holdout_seed: 1
+  collapse_prob: 0.20
+  hide_prob: 1.00
+  unknown_template: "novel member of {}"
+  force_one_pseudo_per_batch: true
+
+loss:
+  name: taxosafe_v10
+  lambda_ncl: 0.50
+  lambda_cons: 0.10
+  mask_hidden_in_consistency: true
+
+  lambda_rank: 0.20
+  lambda_child_known: 0.10
+  lambda_child_novel: 0.40
+  lambda_pceg: 0.15
+  rank_margin: 0.08
+  known_child_margin: 0.30
+  pseudo_child_margin: 0.28
+  pceg_margin: 0.04
+
+  # Explicit local unknown prompt + sibling open-space reservation.
+  lambda_local_unknown: 1.00
+  lambda_tax_contrast: 0.25
+  morphology_attention_temperature: 0.10
+  contrastive_temperature: 0.10
+  sibling_negative_weight: 2.0
+  distant_negative_weight: 0.25
+  lambda_sibling_boundary: 0.50
+  boundary_mix_min: 0.35
+  boundary_mix_max: 0.65
+  boundary_pairs_per_parent: 8
+
+  # Real development near-unknown supervision (training subset only).
+  lambda_real_intra: 0.75
+  lambda_real_intra_parent: 0.25
+  lambda_real_intra_local: 1.00
+  lambda_real_intra_margin: 0.50
+  real_intra_margin: 0.15
+
+  lambda_root: 0.20
+  known_parent_margin: 0.28
+
+  # Development-only OE; no external images and no locked-test images.
+  lambda_oe: 0.50
+  min_oe_train_samples: 100
+  allow_small_oe: false
+  oe_margin: 0.12
+  oe_leaf_margin: 0.12
+  oe_entropy_weight: 0.15
+  oe_leaf_weight: 0.25
+
+  novelty_warmup_epochs: 8
+  oe_warmup_epochs: 8
+
+router_v10:
+  vim_principal_dim: 128
+  fusion_c: 0.5
+  fusion_max_iter: 2000
+  root_grid_quantiles: 121
+  local_grid_quantiles: 121
+  min_known_e2e: 0.65
+  min_branch_known: 12
+  min_branch_intra: 12
+  local_threshold_prior_count: 30.0
+
+optim:
+  name: sgd
+  lr: 0.015
+  momentum: 0.9
+  weight_decay: 0.0005
+  sgd_dampening: 0.0
+  sgd_nesterov: false
+  max_epoch: 220
+  early_stopping_patience: 35
+  early_stopping_min_delta: 0.0
+  lr_scheduler: cosine
+  warmup_epoch: 2
+  warmup_type: constant
+  warmup_cons_lr: 0.001
+  use_scheduler: true
+
+eval_freq: 1
+print_freq: 20
+exp: ViT-B_16/full/TaxoSafe-v10-perf

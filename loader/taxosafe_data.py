@@ -20,6 +20,7 @@ TAXOSAFE_SPLITS = {
     "val_known",
     "test_known",
     "oe_train",
+    "train_intra",
     "val_intra",
     "test_intra",
     "val_extra",
@@ -124,14 +125,14 @@ def TaxoSafeDataLoader(cfg, splits, batch_size):
     
     # ---------------------------------------------------------
     # Legacy roots
-    # ±£ÁôÓÃÓÚ¼æÈİÒÔÇ°µÄ TaxoSafe ÅäÖÃ
+    # ä¿ç•™ç”¨äºå…¼å®¹ä»¥å‰çš„ TaxoSafe é…ç½®
     # ---------------------------------------------------------
     full_root = cfg.get("full_data_root")
     ood_root = cfg.get("ood_root")
     
     # ---------------------------------------------------------
     # Split-specific physical roots
-    # ĞÂĞ­ÒéÓÅÏÈÊ¹ÓÃ£»¾ÉÅäÖÃ×Ô¶¯ fallback
+    # æ–°åè®®ä¼˜å…ˆä½¿ç”¨ï¼›æ—§é…ç½®è‡ªåŠ¨ fallback
     # ---------------------------------------------------------
     near_dev_root = cfg.get(
         "near_dev_root",
@@ -172,6 +173,17 @@ def TaxoSafeDataLoader(cfg, splits, batch_size):
             batch_size=eval_batch_size,
             num_workers=num_workers,
             shuffle=False,
+        )
+
+    if "train_intra" in requested_set:
+        output["train_intra"] = _plain_loader(
+            root_dir=near_dev_root,
+            flist=cfg.get("train_intra"),
+            transform_name=transform_name,
+            augment=True,
+            batch_size=int(batch_size),
+            num_workers=num_workers,
+            shuffle=True,
         )
 
     for split, root_dir in (
