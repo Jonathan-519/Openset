@@ -61,10 +61,32 @@ class PreparationTests(unittest.TestCase):
 
 
 class SuiteTests(unittest.TestCase):
-    def new_plan(self, root, reuse=False, seed=None):
+    def synthetic_config(self, root):
+        """Build a self-contained config without relying on local datasets."""
         cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
         cfg["data"]["name"] = "SYNTHETIC_PROTOCOL_TEST"
         cfg["exp"] = "unit-test"
+        inputs = root / "inputs"
+        inputs.mkdir(parents=True, exist_ok=True)
+        for key in (
+            "train",
+            "val_known",
+            "val_intra",
+            "val_extra",
+            "test_known",
+            "test_intra",
+            "test_extra",
+        ):
+            path = inputs / (key + ".txt")
+            path.write_text("synthetic/{}.jpg,0,0\n".format(key))
+            cfg["data"][key] = str(path)
+        hierarchy = inputs / "tree.npy"
+        hierarchy.write_bytes(b"SYNTHETIC HIERARCHY; NOT A NUMPY ARRAY")
+        cfg["data"]["hierarchy"] = str(hierarchy)
+        return cfg
+
+    def new_plan(self, root, reuse=False, seed=None):
+        cfg = self.synthetic_config(root)
         source = root / "source.yml"
         run = None
         if reuse:
@@ -83,9 +105,7 @@ class SuiteTests(unittest.TestCase):
     def test_disabled_oe_manifest_is_not_required_or_frozen(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
-            cfg["data"]["name"] = "SYNTHETIC_OPTIONAL_OE_TEST"
-            cfg["exp"] = "unit-test"
+            cfg = self.synthetic_config(root)
             missing = root / "missing_oe.txt"
             cfg["data"]["oe_train"] = str(missing)
             cfg["loss"]["lambda_oe"] = 0.0
@@ -98,9 +118,7 @@ class SuiteTests(unittest.TestCase):
     def test_enabled_oe_manifest_is_required_and_frozen(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
-            cfg["data"]["name"] = "SYNTHETIC_REQUIRED_OE_TEST"
-            cfg["exp"] = "unit-test"
+            cfg = self.synthetic_config(root)
             cfg["loss"]["lambda_oe"] = 0.5
 
             missing_source = root / "missing_source.yml"
@@ -160,7 +178,9 @@ class SuiteTests(unittest.TestCase):
             run = root / "run"
             (run / "ckpt").mkdir(parents=True)
             (run / "ckpt/best.pth").write_bytes(b"SYNTHETIC CHECKPOINT")
-            content = suite.resolve(suite.DEFAULT_CONFIG).read_text()
+            content = yaml.safe_dump(
+                self.synthetic_config(root), sort_keys=False
+            )
             original = b"\xef\xbb\xbf" + content.replace("\n", "\r\n").encode("utf-8")
             archive = run / "training.yml"
             archive.write_bytes(original)
