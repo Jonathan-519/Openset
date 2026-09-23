@@ -301,10 +301,12 @@ def main(cfg, args, writer, logger, logdir):
             0.0,
         )
     )
-    
-    # Training/checkpoint selection must not consume any unknown split.
-    # Near-Unknown Dev and Global-OOD Dev are reserved for post-training
-    # calibration only.
+    lambda_real_intra = float(
+        cfg.get("loss", {}).get("lambda_real_intra", 0.0)
+    )
+
+    # v10 may consume TRAIN-ONLY development unknown subsets. The held-out
+    # calibration manifests and every locked test manifest remain untouched.
     splits = [
         "train",
         "val_known",
@@ -312,6 +314,8 @@ def main(cfg, args, writer, logger, logdir):
     
     if lambda_oe > 0.0:
         splits.append("oe_train")
+    if lambda_real_intra > 0.0:
+        splits.append("train_intra")
     
     data_loader = get_dataloader(
         cfg["data"],
@@ -330,6 +334,8 @@ def main(cfg, args, writer, logger, logdir):
     
     if lambda_oe > 0.0:
         required_loader_keys.add("oe_train")
+    if lambda_real_intra > 0.0:
+        required_loader_keys.add("train_intra")
         
     
     
@@ -455,6 +461,7 @@ def main(cfg, args, writer, logger, logdir):
             hier_meta=hier_meta,
             open_treecut=open_treecut,
             oe_data_loader=data_loader.get("oe_train"),
+            intra_data_loader=data_loader.get("train_intra"),
         )
 
         current_lr = optimizer.param_groups[0]["lr"]
@@ -487,9 +494,9 @@ def main(cfg, args, writer, logger, logdir):
             )
             log_meters("val", val_meters, epoch, writer, logger)
 
-            # Leakage-free checkpoint selection: use Known validation only.
-            # Near-Unknown Dev and Global-OOD Dev are intentionally not loaded
-            # during training; they are used only after best.pth is frozen.
+            # Checkpoint selection remains known-only. Training-only unknown
+            # subsets never participate in this decision, and calibration/test
+            # subsets remain isolated until the checkpoint is frozen.
             result = float(val_meters["leaf_acc"])
             message = "Best result: {}; epoch result: {}".format(
                 best_result,
@@ -545,9 +552,9 @@ def main(cfg, args, writer, logger, logdir):
 
     message = (
         "Training finished; best epoch={} and val_known leaf accuracy={:.4f}. "
-        "best.pth was reloaded. No Near-Unknown, Global-OOD, or locked test "
-        "split was used for checkpoint selection. Run post-training "
-        "calibration only after this checkpoint is frozen."
+        "best.pth was reloaded. Checkpoint selection used val_known only; "
+        "training-only unknown subsets never selected checkpoints and no "
+        "locked test split was loaded. Run calibration only after freezing."
     ).format(None if best_epoch is None else best_epoch + 1, best_result)
     print(message)
     logger.info(message)
