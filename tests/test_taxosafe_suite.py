@@ -80,6 +80,52 @@ class SuiteTests(unittest.TestCase):
             "plan_sha256": suite.file_hash(suite.resolve(plan["suite"]) / "plan.json"),
             "outputs_sha256": {p: suite.file_hash(suite.resolve(p)) for p in step["outputs"]}})
 
+    def test_disabled_oe_manifest_is_not_required_or_frozen(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
+            cfg["data"]["name"] = "SYNTHETIC_OPTIONAL_OE_TEST"
+            cfg["exp"] = "unit-test"
+            missing = root / "missing_oe.txt"
+            cfg["data"]["oe_train"] = str(missing)
+            cfg["loss"]["lambda_oe"] = 0.0
+            source = root / "source.yml"
+            source.write_text(yaml.safe_dump(cfg))
+            plan = suite.make_plan(source, root / "suite")
+            self.assertFalse(missing.exists())
+            self.assertNotIn(str(missing.resolve()), plan["inputs_sha256"])
+
+    def test_enabled_oe_manifest_is_required_and_frozen(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
+            cfg["data"]["name"] = "SYNTHETIC_REQUIRED_OE_TEST"
+            cfg["exp"] = "unit-test"
+            cfg["loss"]["lambda_oe"] = 0.5
+
+            missing_source = root / "missing_source.yml"
+            missing_cfg = copy.deepcopy(cfg)
+            missing_cfg["data"].pop("oe_train", None)
+            missing_source.write_text(yaml.safe_dump(missing_cfg))
+            with self.assertRaisesRegex(
+                ValueError, "lambda_oe > 0 requires data.oe_train"
+            ):
+                suite.make_plan(
+                    missing_source, root / "missing_manifest_suite"
+                )
+
+            manifest = root / "oe_train.txt"
+            manifest.write_text("synthetic/ood.jpg,-1,0\n")
+            cfg["data"]["oe_train"] = str(manifest)
+            source = root / "source.yml"
+            source.write_text(yaml.safe_dump(cfg))
+            plan = suite.make_plan(source, root / "suite")
+            key = str(manifest.resolve())
+            self.assertIn(key, plan["inputs_sha256"])
+            self.assertEqual(
+                plan["inputs_sha256"][key], suite.file_hash(manifest)
+            )
+
     def test_seed_updates_model_sampler_and_holdout_and_variants_keep_root_fixed(self):
         with tempfile.TemporaryDirectory() as directory:
             plan = self.new_plan(Path(directory), seed=3)
