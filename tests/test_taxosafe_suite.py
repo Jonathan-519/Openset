@@ -17,7 +17,7 @@ from prepro.build_known_view import PARENTS, build_known_view
 from tools import prepare_taxosafe as prepare
 from tools import run_taxosafe_suite as suite
 from taxosafe_visual import pipeline
-from test_taxosafe_residual import fixture
+from tests.test_taxosafe_residual import fixture
 
 
 class PreparationTests(unittest.TestCase):
