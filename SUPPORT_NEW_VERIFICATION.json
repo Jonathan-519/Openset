@@ -1,0 +1,49 @@
+{
+  "method": "support_conditioned_v1",
+  "branch": "new",
+  "base_branch": "taxosafe-v11-dcbs",
+  "base_commit": "6797a6f05708e1afb954de4922b1eb943d85e1be",
+  "verified_date": "2026-09-30",
+  "verification_type": "software_contracts_and_manifest_identity_audits_not_model_performance",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.14.0+cu130",
+    "cuda_available": false
+  },
+  "tests": [
+    {
+      "command": "python -m unittest discover -s tests -p 'test_taxosafe_support*.py' -v",
+      "passed": 36,
+      "failed": 0
+    },
+    {
+      "command": "python -m unittest tests.test_taxosafe_dcbs tests.test_taxosafe_dcbs_pipeline tests.test_taxosafe_dcbs_delivery tests.test_taxosafe_v10_protocol tests.test_taxosafe_suite -q",
+      "passed": 39,
+      "failed": 0
+    }
+  ],
+  "preflight_unique_images": {
+    "train": 1610,
+    "val_known": 219,
+    "val_intra": 69,
+    "val_extra": 88,
+    "test_known": 450,
+    "test_intra": 204,
+    "test_extra": 272
+  },
+  "test_manifest_rows": {
+    "test_known": 451,
+    "test_intra": 204,
+    "test_extra": 272
+  },
+  "preflight_only_reads_identity_bytes": true,
+  "performance_training_completed": false,
+  "gpu_speed_measured": false,
+  "four_targets_empirically_passed": null,
+  "gpu_followup": "Follow TAXOSAFE_NEW.md; report all four metrics and measure same-hardware v11 speed comparison.",
+  "limitations": [
+    "Shared MaPLe backbone and prompts with separate token adaptation, not two independent full encoders.",
+    "No claim that TRAIN support removal is an encoder-unseen species/parent training fold.",
+    "External HND/ProHOC reproductions and actual accuracy/speed comparisons are not provided by CPU tests."
+  ]
+}
