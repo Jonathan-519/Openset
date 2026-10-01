@@ -1,11 +1,11 @@
 """Upgrade an existing TaxoLocal-v2 router to v2.1 without retraining."""
 
 import argparse
-import hashlib
 import json
 import os
 
-import yaml
+import taxosafe_io as _io
+
 
 from metrics_open import evaluate_open_set
 from taxolocal_v21_router import apply_router, upgrade_router
@@ -15,51 +15,23 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def load_yaml(path):
-    path = os.path.abspath(path)
-    with open(path, "r", encoding="utf-8") as stream:
-        value = yaml.load(stream, Loader=yaml.SafeLoader)
-    if not isinstance(value, dict):
-        raise ValueError("The YAML root must be a mapping")
-    return value, path
+    return _io.load_yaml(path)
 
 
 def resolve_run_dir(cfg, trial, project_root, explicit_run_dir=None):
-    if explicit_run_dir:
-        return os.path.abspath(explicit_run_dir)
-    return os.path.join(
-        project_root, "runs", cfg["data"]["name"], cfg["model"]["arch"],
-        cfg["exp"], "trial_{}".format(trial),
-    )
+    return _io.resolve_run_dir(cfg, trial, project_root, explicit_run_dir)
 
 
 def sha256_file(path, chunk_size=1024 * 1024):
-    digest = hashlib.sha256()
-    with open(path, "rb") as stream:
-        while True:
-            chunk = stream.read(chunk_size)
-            if not chunk:
-                break
-            digest.update(chunk)
-    return digest.hexdigest()
+    return _io.sha256_file(path, chunk_size)
 
 
 def write_json(path, value):
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as stream:
-        json.dump(value, stream, ensure_ascii=False, indent=2, sort_keys=True)
-        stream.write("\n")
+    return _io.write_json(path, value)
 
 
 def write_jsonl(path, records, drop_vector_fields=False):
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as stream:
-        for record in records:
-            output = dict(record)
-            if drop_vector_fields:
-                output.pop("parent_cosine", None)
-                output.pop("leaf_cosine", None)
-                output.pop("image_feature", None)
-            stream.write(json.dumps(output, ensure_ascii=False) + "\n")
+    return _io.write_jsonl(path, records, drop_vector_fields)
 
 
 def read_jsonl(path):

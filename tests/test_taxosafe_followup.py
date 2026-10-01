@@ -8,10 +8,13 @@ import yaml
 
 from tools.diagnose_taxosafe_v1 import combine_gates, root_signature
 from tools.plan_taxosafe_factorial import controls, make_controls
-from tools.plan_taxosafe_partial_pooling import variants as pooling_variants, make_plan as make_pooling_plan
+from tools.plan_taxosafe_partial_pooling import (
+    variants as pooling_variants, make_plan as make_pooling_plan, verified_training_source,
+)
 from tools.plan_taxosafe_balanced_v3 import variants as balanced_variants, make_plan as make_balanced_plan
 from tools import run_taxosafe_suite as suite
 from taxosafe_visual import pipeline
+from tests._fixtures import freeze_legacy_oe_input, synthetic_suite_config
 
 
 class FollowupTests(unittest.TestCase):
@@ -93,9 +96,7 @@ class FollowupTests(unittest.TestCase):
     def test_plan_reuses_verified_checkpoint_and_freezes_source_provenance(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
-            cfg["data"]["name"] = "SYNTHETIC_FOLLOWUP_TEST"
-            cfg["exp"] = "unit-test"
+            cfg = synthetic_suite_config(root, "SYNTHETIC_FOLLOWUP_TEST")
             source = root / "source.yml"
             source.write_text(yaml.safe_dump(cfg))
             original = suite.make_plan(source, root / "original/seed_1", seed=1)
@@ -128,9 +129,8 @@ class FollowupTests(unittest.TestCase):
     def test_partial_pooling_plan_accepts_intentional_residual_change_but_verifies_training(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
-            cfg["data"]["name"] = "SYNTHETIC_POOLING_TEST"
-            cfg["exp"] = "unit-test"
+            cfg = synthetic_suite_config(root, "SYNTHETIC_POOLING_TEST")
+            Path(cfg["data"]["oe_train"]).unlink()
             source = root / "source.yml"
             source.write_text(yaml.safe_dump(cfg))
             original = suite.make_plan(source, root / "original/seed_1", seed=1)
@@ -161,9 +161,8 @@ class FollowupTests(unittest.TestCase):
     def test_balanced_v3_plan_freezes_all_profiles_without_retraining(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
-            cfg["data"]["name"] = "SYNTHETIC_BALANCED_TEST"
-            cfg["exp"] = "unit-test"
+            cfg = synthetic_suite_config(root, "SYNTHETIC_BALANCED_TEST")
+            Path(cfg["data"]["oe_train"]).unlink()
             source = root / "source.yml"
             source.write_text(yaml.safe_dump(cfg))
             original = suite.make_plan(source, root / "original/seed_1", seed=1)
@@ -190,6 +189,56 @@ class FollowupTests(unittest.TestCase):
             self.assertEqual(test["argv"][-1], "all")
             self.assertIn("test/balanced/metrics.json", "\n".join(test["outputs"]))
             suite.verify_inputs(plan)
+
+    def training_source(self, root, oe_mode):
+        """Build real plan/receipt hashes with synthetic training outputs."""
+        cfg = synthetic_suite_config(root, "SYNTHETIC_OE_PROVENANCE_TEST")
+        if oe_mode == "enabled_missing_hash":
+            cfg["loss"]["lambda_oe"] = 0.1
+        source = root / "source.yml"
+        source.write_text(yaml.safe_dump(cfg))
+        original = suite.make_plan(source, root / "original/seed_1", seed=1)
+        if oe_mode == "legacy_frozen":
+            freeze_legacy_oe_input(original, cfg)
+        elif oe_mode == "enabled_missing_hash":
+            original["inputs_sha256"].pop(suite.portable(suite.resolve(cfg["data"]["oe_train"])))
+        elif oe_mode == "enabled_missing_config":
+            frozen = suite.resolve(original["training_config"])
+            frozen_cfg = yaml.safe_load(frozen.read_text())
+            frozen_cfg["loss"]["lambda_oe"] = 0.1
+            frozen_cfg["data"].pop("oe_train")
+            frozen.write_text(yaml.safe_dump(frozen_cfg))
+        run = root / "run"
+        (run / "ckpt").mkdir(parents=True)
+        (run / "ckpt/best.pth").write_bytes(b"SYNTHETIC, NOT A TORCH CHECKPOINT")
+        archive = run / "training.yml"
+        archive.write_bytes(suite.resolve(original["training_config"]).read_bytes())
+        original.update(run_dir=str(run), archived_training_config=str(archive))
+        plan_path = root / "original/seed_1/plan.json"
+        suite.dump(plan_path, original)
+        training = suite.steps(original, "train")[0]
+        suite.dump(suite.receipt_path(original, training), {
+            "plan_sha256": suite.file_hash(plan_path),
+            "outputs_sha256": {p: suite.file_hash(suite.resolve(p)) for p in training["outputs"]}})
+        return cfg
+
+    def test_legacy_frozen_disabled_oe_remains_verified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cfg = self.training_source(root, "legacy_frozen")
+            verified_training_source(root / "original", 1)
+            Path(cfg["data"]["oe_train"]).write_text("CHANGED", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Original data/taxonomy input changed or missing"):
+                verified_training_source(root / "original", 1)
+
+    def test_enabled_oe_requires_config_and_frozen_hash(self):
+        for mode, error in (("enabled_missing_hash", "Original data/taxonomy input changed or missing"),
+                            ("enabled_missing_config", "Original enabled OE training requires data.oe_train")):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.training_source(root, mode)
+                with self.assertRaisesRegex(ValueError, error):
+                    verified_training_source(root / "original", 1)
 
 
 if __name__ == "__main__":

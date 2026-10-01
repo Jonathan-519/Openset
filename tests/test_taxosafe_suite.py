@@ -17,6 +17,7 @@ from prepro.build_known_view import PARENTS, build_known_view
 from tools import prepare_taxosafe as prepare
 from tools import run_taxosafe_suite as suite
 from taxosafe_visual import pipeline
+from tests._fixtures import synthetic_suite_config
 from tests.test_taxosafe_residual import fixture
 
 
@@ -63,27 +64,7 @@ class PreparationTests(unittest.TestCase):
 class SuiteTests(unittest.TestCase):
     def synthetic_config(self, root):
         """Build a self-contained config without relying on local datasets."""
-        cfg = yaml.safe_load(suite.resolve(suite.DEFAULT_CONFIG).read_text())
-        cfg["data"]["name"] = "SYNTHETIC_PROTOCOL_TEST"
-        cfg["exp"] = "unit-test"
-        inputs = root / "inputs"
-        inputs.mkdir(parents=True, exist_ok=True)
-        for key in (
-            "train",
-            "val_known",
-            "val_intra",
-            "val_extra",
-            "test_known",
-            "test_intra",
-            "test_extra",
-        ):
-            path = inputs / (key + ".txt")
-            path.write_text("synthetic/{}.jpg,0,0\n".format(key))
-            cfg["data"][key] = str(path)
-        hierarchy = inputs / "tree.npy"
-        hierarchy.write_bytes(b"SYNTHETIC HIERARCHY; NOT A NUMPY ARRAY")
-        cfg["data"]["hierarchy"] = str(hierarchy)
-        return cfg
+        return synthetic_suite_config(root)
 
     def new_plan(self, root, reuse=False, seed=None):
         cfg = self.synthetic_config(root)
