@@ -1,5 +1,6 @@
 """New-method config and receipts on top of the v11 data isolation contract."""
 import copy
+import math
 from pathlib import Path
 
 import yaml
@@ -30,6 +31,10 @@ def effective_config(path, variant="main", seed=1):
     if cfg["data"].get("resize_mode", "center_crop") not in ("center_crop", "letterbox"):
         raise ValueError("Unsupported resize mode")
     settings = cfg["support"]
+    if not isinstance(settings.get("decoupled", False), bool):
+        raise ValueError("support.decoupled must be a YAML boolean")
+    if cfg.get("calibration", {}).get("policy", "balanced") not in ("balanced", "known_first"):
+        raise ValueError("Unknown calibration policy")
     weights = settings.setdefault("loss", {})
     if variant == "no_pair":
         weights["paired"] = 0.0
@@ -44,6 +49,12 @@ def effective_config(path, variant="main", seed=1):
         weights.update(episode=0.0, paired=0.0, control=0.0)
     if any(float(v) < 0 for v in weights.values()):
         raise ValueError("Loss weights must be nonnegative")
+    if settings.get("decoupled", False):
+        if any(not math.isfinite(float(v)) for v in weights.values()):
+            raise ValueError("Decoupled loss weights must be finite")
+        margin = float(settings.get("margins", {}).get("representation", .2))
+        if not math.isfinite(margin) or not 0 <= margin <= 2:
+            raise ValueError("Representation margin must be finite and in [0,2]")
     if int(settings.get("max_per_leaf", 8)) < 2:
         raise ValueError("At least two references per leaf are required before query exclusion")
     training = cfg["training"]
@@ -69,9 +80,10 @@ def signature(cfg):
     result = dcbs_signature(cfg)
     paths = sorted((PROJECT_ROOT / "taxosafe_support").glob("*.py"))
     paths += [PROJECT_ROOT / name for name in (
-        "train_taxosafe_new.py", "calibrate_taxosafe_new.py", "test_taxosafe_new.py")]
+        "train_taxosafe_new.py", "calibrate_taxosafe_new.py", "test_taxosafe_new.py",
+        "tools/validate_taxosafe_support_holdout.py")]
     result["support_code"] = object_hash({str(p.relative_to(PROJECT_ROOT)): file_hash(p) for p in paths})
-    result["method"] = "support_conditioned_v1"
+    result["method"] = "support_decoupled_v2" if cfg["support"].get("decoupled", False) else "support_conditioned_v1"
     return result
 
 

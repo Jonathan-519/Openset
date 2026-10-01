@@ -36,7 +36,7 @@ class SupportBank:
     max_per_leaf: int
 
     def __init__(self, parent, fine, labels, hashes: Sequence[str], leaf_to_parent,
-                 parent_local=None, fine_local=None, max_per_leaf=8):
+                 parent_local=None, fine_local=None, max_per_leaf=8, required_leaf_mask=None):
         parent, fine = torch.as_tensor(parent), torch.as_tensor(fine)
         labels = torch.as_tensor(labels, dtype=torch.long, device=parent.device)
         mapping = validate_mapping(leaf_to_parent).to(parent.device)
@@ -51,6 +51,16 @@ class SupportBank:
             raise ValueError("Support features must be finite")
         if int(max_per_leaf) < 1:
             raise ValueError("max_per_leaf must be positive")
+        required = torch.ones(len(mapping), dtype=torch.bool, device=parent.device)
+        if required_leaf_mask is not None:
+            required = torch.as_tensor(required_leaf_mask, dtype=torch.bool, device=parent.device)
+            if required.shape != mapping.shape or not bool(required.any()):
+                raise ValueError("required_leaf_mask must select at least one known leaf")
+            if bool((~required[labels]).any()):
+                raise ValueError("Support contains an excluded holdout leaf")
+            # Optional state is absent for legacy banks. Loading a strict
+            # holdout cache revalidates both eligible and forbidden classes.
+            self.required_leaf_mask = required.detach().clone()
         unique = {}
         for i, (h, c) in enumerate(zip(hashes, labels.tolist())):
             if h in unique and int(labels[unique[h]]) != c:
@@ -59,7 +69,7 @@ class SupportBank:
         chosen = []
         for c in range(len(mapping)):
             rows = [i for h, i in sorted(unique.items()) if int(labels[i]) == c]
-            if not rows:
+            if not rows and bool(required[c]):
                 raise ValueError("Missing training support for leaf %d" % c)
             chosen.extend(rows[:int(max_per_leaf)])
         index = torch.tensor(chosen, device=parent.device)
@@ -93,6 +103,8 @@ class SupportBank:
             value = getattr(self, name)
             if value is not None:
                 setattr(self, name, value.to(device))
+        if hasattr(self, "required_leaf_mask"):
+            self.required_leaf_mask = self.required_leaf_mask.to(device)
         return self
 
     def state_dict(self):

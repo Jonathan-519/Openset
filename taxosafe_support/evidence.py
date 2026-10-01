@@ -12,11 +12,20 @@ def _masked_log_softmax(logits, active):
     return F.log_softmax(safe, dim=-1).masked_fill(~active, -torch.inf)
 
 
+def _masked_logsumexp(values, active, dim=-1):
+    """Exact absent mass with a finite backward path for empty rows."""
+    has_values = active.any(dim=dim, keepdim=True)
+    masked = values.masked_fill(~active, -torch.inf)
+    safe = torch.where(has_values, masked, torch.zeros_like(masked))
+    return torch.logsumexp(safe, dim=dim).masked_fill(~has_values.squeeze(dim), -torch.inf)
+
+
 class CandidateMatcher(nn.Module):
-    """Depth-shared absolute evidence: global, local, normalized distance.
+    """Depth-shared candidate score: global, local, normalized distance.
 
     No leaf identity, parent identity, candidate count, or support count is an
     input. The cosine prior keeps initial scores useful before episode training.
+    Decoupled mode gives ranking and membership independent instances.
     """
     def __init__(self, hidden_dim, temperature):
         super().__init__()
@@ -30,7 +39,8 @@ class CandidateMatcher(nn.Module):
 
 
 class HierarchicalEvidence(nn.Module):
-    def __init__(self, dimension, leaf_to_parent, hidden_dim=32, temperature=0.1, local_enabled=True):
+    def __init__(self, dimension, leaf_to_parent, hidden_dim=32, temperature=0.1,
+                 local_enabled=True, decoupled=False):
         super().__init__()
         mapping = validate_mapping(leaf_to_parent)
         if int(dimension) < 1 or int(hidden_dim) < 1 or float(temperature) <= 0:
@@ -43,6 +53,12 @@ class HierarchicalEvidence(nn.Module):
         self.root_bias = nn.Parameter(torch.zeros(()))
         self.local_bias = nn.Parameter(torch.zeros(()))
         self.local_enabled = bool(local_enabled)
+        self.decoupled = bool(decoupled)
+        # Do not construct new modules in legacy mode: its state keys, random
+        # initialization sequence, and forward arithmetic remain unchanged.
+        if self.decoupled:
+            self.parent_membership = CandidateMatcher(int(hidden_dim), temperature)
+            self.fine_membership = CandidateMatcher(int(hidden_dim), temperature)
 
     def _local(self, query, references, weights, fallback):
         if not self.local_enabled or query is None or references is None:
@@ -72,6 +88,8 @@ class HierarchicalEvidence(nn.Module):
         parent_features, leaf_features = torch.stack((pg, pl, pd), -1), torch.stack((fg, fl, fd), -1)
         parent_logits = self.parent_matcher(parent_features).masked_fill(~stats["parent_active"], -torch.inf)
         leaf_logits = self.fine_matcher(leaf_features).masked_fill(~stats["leaf_active"], -torch.inf)
+        if self.decoupled:
+            return self._decoupled_output(parent_features, leaf_features, parent_logits, leaf_logits, stats)
         root_logit = parent_logits.max(-1).values + self.root_bias
         local_logits = torch.stack([leaf_logits[:, self.leaf_to_parent == p].max(-1).values
                                     for p in range(self.num_parents)], -1) + self.local_bias
@@ -94,3 +112,47 @@ class HierarchicalEvidence(nn.Module):
                 "leaf_logits": leaf_logits, "active_leaves": stats["leaf_active"],
                 "active_parents": stats["parent_active"], "parent_features": parent_features,
                 "leaf_features": leaf_features}
+
+    def _decoupled_output(self, parent_features, leaf_features, parent_logits, leaf_logits, stats):
+        """Route mass using the membership of the SAME identity candidate.
+
+        q and t only rank identities. Independent sigmoid gates r_p and a_c
+        express membership: leaf=q_p*r_p*t_c*a_c, parent=q_p*r_p*sum(t_c*(1-a_c)),
+        root=sum(q_p*(1-r_p)). Thus a convincing sibling cannot lend its
+        membership evidence to a different predicted leaf or parent.
+        """
+        pa, la = stats["parent_active"], stats["leaf_active"]
+        # Existing scalar parameters remain useful: they are shared membership
+        # intercepts, supervised by BCE as well as the joint episode likelihood.
+        pm = (self.parent_membership(parent_features) + self.root_bias).masked_fill(~pa, -torch.inf)
+        lm = (self.fine_membership(leaf_features) + self.local_bias).masked_fill(~la, -torch.inf)
+        log_q = _masked_log_softmax(parent_logits, pa)
+        log_t = torch.full_like(leaf_logits, -torch.inf)
+        local_accept, local_reject = [], []
+        for p in range(self.num_parents):
+            children = self.leaf_to_parent == p
+            conditional = _masked_log_softmax(leaf_logits[:, children], la[:, children])
+            log_t[:, children] = conditional
+            local_accept.append(_masked_logsumexp(conditional + F.logsigmoid(lm[:, children]), la[:, children]))
+            local_reject.append(_masked_logsumexp(conditional + F.logsigmoid(-lm[:, children]), la[:, children]))
+        log_local_accept, log_local_reject = torch.stack(local_accept, -1), torch.stack(local_reject, -1)
+        log_root_accept = _masked_logsumexp(log_q + F.logsigmoid(pm), pa)
+        log_root_reject = _masked_logsumexp(log_q + F.logsigmoid(-pm), pa)
+        has_parent = pa.any(-1)
+        log_root_reject = torch.where(has_parent, log_root_reject, torch.zeros_like(log_root_reject))
+        root_logit = log_root_accept - log_root_reject
+        # Never subtract -inf from -inf for an inactive parent, even if the
+        # resulting slot would subsequently be masked.
+        local_logits = (torch.where(pa, log_local_accept, torch.zeros_like(log_local_accept))
+                        - torch.where(pa, log_local_reject, torch.zeros_like(log_local_reject)))
+        local_logits = local_logits.masked_fill(~pa, -torch.inf)
+        log_parent = log_q + F.logsigmoid(pm) + log_local_reject
+        log_leaf = (log_q[:, self.leaf_to_parent] + F.logsigmoid(pm)[:, self.leaf_to_parent]
+                    + log_t + F.logsigmoid(lm))
+        return {"log_probs": torch.cat((log_root_reject[:, None], log_parent, log_leaf), -1),
+                "root_logit": root_logit, "leaf_accept_logits": local_logits,
+                "parent_logits": parent_logits, "leaf_logits": leaf_logits,
+                "parent_membership_logits": pm, "leaf_membership_logits": lm,
+                "active_leaves": la, "active_parents": pa,
+                "parent_features": parent_features, "leaf_features": leaf_features,
+                "decoupled": True}

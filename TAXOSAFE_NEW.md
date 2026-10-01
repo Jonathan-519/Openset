@@ -1,5 +1,7 @@
 # TaxoSafe new：支持集条件化的层级证据学习
 
+> 本页保留早期 `TaxoSafe_support_new.yml` 的使用说明。本轮新增的类别判别／成员性分离方案、TRAIN 内部严格留类验证及显式新配置运行命令，见 [TaxoSafe decoupled 运行说明](docs/TAXOSAFE_DECOUPLED.md)。
+
 本分支基于 `taxosafe-v11-dcbs`，新增独立的 `taxosafe_support/` 方法、配置及训练／校准／测试入口。目标仍是 known 到正确叶、near 到正确父、extra 到根。已有图片、数据清单、旧方法入口和历史实验目录继续保留。
 
 这是待真实 GPU 训练验证的实现。代码和 CPU 契约测试不代表四项指标已经达标，也不证明优于历史方法。速度设计采用一次视觉主干前向，但与 v11 同速必须在同一服务器上实测。

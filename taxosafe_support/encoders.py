@@ -39,7 +39,7 @@ class TokenBranch(nn.Module):
 
 
 class SupportEncoder(nn.Module):
-    def __init__(self, backbone, meta, settings):
+    def __init__(self, backbone, meta, settings, active_leaf_mask=None):
         super().__init__()
         self.backbone = backbone
         self.meta = meta
@@ -56,10 +56,28 @@ class SupportEncoder(nn.Module):
         self.shared_encoder = bool(settings.get("shared_encoder", False))
         self.fine_branch = None if self.shared_encoder else TokenBranch(dimension, **kwargs)
         self.local_enabled = bool(settings.get("local_enabled", True))
+        # TRAIN-only leave-class folds retain global taxonomy indices while
+        # removing held-out names from the trainable text-encoding forward.
+        # Nonpersistent buffers keep every legacy checkpoint key unchanged.
+        active = None if active_leaf_mask is None else torch.as_tensor(active_leaf_mask, dtype=torch.bool)
+        if active is not None and (active.shape != (len(meta["leaf_names"]),) or not bool(active.any())):
+            raise ValueError("active_leaf_mask must retain at least one known leaf")
+        self.register_buffer("active_leaf_mask", active, persistent=False)
+        parent_active = None
+        if active is not None:
+            mapping = torch.tensor(meta["leaf_to_parent"], dtype=torch.long)
+            parent_active = torch.zeros(len(meta["parent_names"]), dtype=torch.bool)
+            parent_active[mapping[active]] = True
+        self.register_buffer("active_parent_mask", parent_active, persistent=False)
 
     def text_features(self):
         names = self.meta["leaf_names"] + self.meta["parent_names"]
-        return self.backbone.encode_text(names, normalize=True).float()
+        if self.active_leaf_mask is None:
+            return self.backbone.encode_text(names, normalize=True).float()
+        active = torch.cat((self.active_leaf_mask, self.active_parent_mask))
+        indices = active.nonzero(as_tuple=True)[0]
+        encoded = self.backbone.encode_text([names[i] for i in indices.tolist()], normalize=True).float()
+        return encoded.new_zeros(len(names), self.dimension).index_copy(0, indices.to(encoded.device), encoded)
 
     def encode(self, images, text_features=None, classify=True):
         # The only visual forward: no detach on a real query's graph.
@@ -80,6 +98,9 @@ class SupportEncoder(nn.Module):
             scale = self.backbone.model.logit_scale.exp().float()
             result.update(leaf_logits=scale * fine @ text[:count].T,
                           parent_logits=scale * parent @ text[count:].T)
+            if self.active_leaf_mask is not None:
+                result["leaf_logits"] = result["leaf_logits"].masked_fill(~self.active_leaf_mask, -torch.inf)
+                result["parent_logits"] = result["parent_logits"].masked_fill(~self.active_parent_mask, -torch.inf)
         return result
 
     def forward(self, images):

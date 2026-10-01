@@ -20,7 +20,7 @@ from .calibration import apply_router, calibrate, evaluate_gates, evaluate_recor
 from .encoders import SupportEncoder
 from .evidence import HierarchicalEvidence
 from .episodes import build_episodes
-from .losses import hierarchical_losses
+from .losses import hierarchical_losses, representation_losses
 from .protocol import (PROJECT_ROOT, VARIANTS, claim_stage, effective_config, file_hash,
                        load_stage_rows, read_json, require_signature, resolve, run_lock,
                        signature, verify_artifact, write_json, write_records)
@@ -91,7 +91,13 @@ def make_loader(rows, cfg, meta, training=False):
 
 def make_backbone(cfg, meta, device):
     from models import get_model
-    backbone = get_model(cfg["model"], meta["leaf_names"]).to(device)
+    names = meta["leaf_names"]
+    active = cfg.get("strict_holdout", {}).get("active_leaf_mask")
+    if active is not None:
+        if len(active) != len(names) or not any(active):
+            raise ValueError("Invalid strict holdout backbone class mask")
+        names = [name for name, allowed in zip(names, active) if allowed]
+    backbone = get_model(cfg["model"], names).to(device)
     for name, parameter in backbone.named_parameters():
         parameter.requires_grad_("prompt_learner" in name or "VPT" in name)
     if not any(p.requires_grad for p in backbone.parameters()):
@@ -144,20 +150,22 @@ def reference_features(encoder, loader, device, collect_anchor=False):
             torch.cat(anchor) if collect_anchor else None)
 
 
-def reference_bank(encoder, loader, rows, cfg, meta, device, collect_anchor=False):
+def reference_bank(encoder, loader, rows, cfg, meta, device, collect_anchor=False,
+                   active_leaf_mask=None):
     _sync(device)
     started = time.perf_counter()
     encoded, labels, anchor = reference_features(encoder, loader, device, collect_anchor)
     bank = SupportBank(encoded["parent"], encoded["fine"], labels,
                        [r["image_sha256"] for r in rows], meta["leaf_to_parent"],
                        parent_local=encoded.get("parent_local"), fine_local=encoded.get("fine_local"),
-                       max_per_leaf=int(cfg["support"].get("max_per_leaf", 8))).to(device)
+                       max_per_leaf=int(cfg["support"].get("max_per_leaf", 8)),
+                       required_leaf_mask=active_leaf_mask).to(device)
     _sync(device)
     return bank, anchor, time.perf_counter() - started
 
 
 @torch.no_grad()
-def known_validation(encoder, evidence, bank, loader, meta, device):
+def known_validation(encoder, evidence, bank, loader, meta, device, selection_splits=None):
     encoder.eval()
     evidence.eval()
     correct, structured_correct, nll, count = 0, 0, 0., 0
@@ -175,7 +183,7 @@ def known_validation(encoder, evidence, bank, loader, meta, device):
         raise ValueError("Known validation split is empty")
     return {"leaf_accuracy": correct / count, "uncalibrated_e2e": structured_correct / count,
             "structured_nll": nll / count, "count": count,
-            "selection_splits": ["val_known"], "unknown_data_used": False}
+            "selection_splits": selection_splits or ["val_known"], "unknown_data_used": False}
 
 
 def _save_checkpoint(path, encoder, evidence, cfg, meta, epoch, validation):
@@ -190,7 +198,8 @@ def _make_evidence(encoder, cfg, meta, device):
     return HierarchicalEvidence(encoder.dimension, meta["leaf_to_parent"],
                                 hidden_dim=int(settings.get("hidden_dim", 32)),
                                 temperature=float(settings.get("temperature", .1)),
-                                local_enabled=bool(settings.get("local_enabled", True))).to(device)
+                                local_enabled=bool(settings.get("local_enabled", True)),
+                                decoupled=bool(settings.get("decoupled", False))).to(device)
 
 
 def _optimizer(encoder, evidence, settings):
@@ -212,6 +221,31 @@ def train(cfg, directory, device, debug=False):
     meta = hierarchy(cfg)
     groups, audit = load_stage_rows(cfg, "train", meta)
     sig = signature(cfg)
+    return train_rows(cfg, directory, device, groups, meta, audit, sig, debug=debug)
+
+
+def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
+               active_leaf_mask=None, selection_splits=None):
+    """Shared training engine for the main run and strict TRAIN-only folds.
+
+    The public ``train`` stage owns normal manifest loading. Fold validation
+    passes audited subsets of TRAIN without reopening development or test data.
+    """
+    if set(groups) != {"train", "val_known"} or any(not rows for rows in groups.values()):
+        raise ValueError("Training requires nonempty train and known-validation rows")
+    if any(row["status"] != "known" for rows in groups.values() for row in rows):
+        raise ValueError("Only known rows may enter the training engine")
+    if active_leaf_mask is not None:
+        active_leaf_mask = torch.as_tensor(active_leaf_mask, dtype=torch.bool)
+        if active_leaf_mask.shape != (len(meta["leaf_names"]),) or not bool(active_leaf_mask.any()):
+            raise ValueError("Invalid TRAIN-only fold mask")
+        fold = cfg.get("strict_holdout", {})
+        if fold.get("active_leaf_mask") != active_leaf_mask.tolist():
+            raise ValueError("Fold mask must be bound to the configuration signature")
+        if any(not active_leaf_mask[row["true_leaf"]] for rows in groups.values() for row in rows):
+            raise ValueError("Held-out images cannot enter training or known model selection")
+    elif cfg.get("strict_holdout"):
+        raise ValueError("A strict holdout fold requires its active-leaf mask")
     output = claim_stage(directory, "training")
     write_json(output / "config.json", cfg)
     write_json(output / "inputs.json", {"signature": sig, "audit": audit, "meta": meta})
@@ -219,7 +253,8 @@ def train(cfg, directory, device, debug=False):
     train_loader = make_loader(groups["train"], cfg, meta, training=True)
     reference_loader = make_loader(groups["train"], cfg, meta)
     val_loader = make_loader(groups["val_known"], cfg, meta)
-    encoder = SupportEncoder(make_backbone(cfg, meta, device), meta, cfg["support"]).to(device)
+    encoder = SupportEncoder(make_backbone(cfg, meta, device), meta, cfg["support"],
+                             active_leaf_mask=active_leaf_mask).to(device)
     evidence = _make_evidence(encoder, cfg, meta, device)
     settings = cfg["training"]
     optimizer, parameters = _optimizer(encoder, evidence, settings)
@@ -231,7 +266,8 @@ def train(cfg, directory, device, debug=False):
         raise ValueError("Too few epochs for warmup and required support intervention exposure")
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
     bank, anchor, reference_seconds = reference_bank(
-        encoder, reference_loader, groups["train"], cfg, meta, device, collect_anchor=warmup == 0)
+        encoder, reference_loader, groups["train"], cfg, meta, device, collect_anchor=warmup == 0,
+        active_leaf_mask=active_leaf_mask)
     parameters_report = {"total": sum(p.numel() for p in encoder.parameters()) +
                          sum(p.numel() for p in evidence.parameters()),
                          "trainable": sum(p.numel() for p in parameters),
@@ -260,7 +296,7 @@ def train(cfg, directory, device, debug=False):
             loss, terms, valid_counts = training_loss(
                 encoded, labels, indices, query_hashes, bank, evidence, cfg, meta,
                 seed=int(cfg["seed"]) * 1000003 + epoch * 10007 + step,
-                episode_weight=ramp, anchor=anchor)
+                episode_weight=ramp, anchor=anchor, active_leaf_mask=active_leaf_mask)
             if not bool(torch.isfinite(loss)):
                 raise ValueError("Non-finite support training loss")
             optimizer.zero_grad(set_to_none=True)
@@ -287,12 +323,13 @@ def train(cfg, directory, device, debug=False):
             episode_epochs += 1
         bank, warmup_anchor, next_reference_seconds = reference_bank(
             encoder, reference_loader, groups["train"], cfg, meta, device,
-            collect_anchor=epoch + 1 == warmup)
+            collect_anchor=epoch + 1 == warmup, active_leaf_mask=active_leaf_mask)
         if warmup_anchor is not None:
             anchor = warmup_anchor
         _sync(device)
         validation_started = time.perf_counter()
-        validation = known_validation(encoder, evidence, bank, val_loader, meta, device)
+        validation = known_validation(encoder, evidence, bank, val_loader, meta, device,
+                                      selection_splits=selection_splits)
         _sync(device)
         validation_seconds = time.perf_counter() - validation_started
         eligible = epoch + 1 >= warmup + minimum and episode_epochs >= minimum
@@ -322,7 +359,8 @@ def train(cfg, directory, device, debug=False):
     encoder.load_state_dict(checkpoint["encoder"], strict=True)
     evidence.load_state_dict(checkpoint["evidence"], strict=True)
     bank, _, final_reference_seconds = reference_bank(
-        encoder, reference_loader, groups["train"], cfg, meta, device)
+        encoder, reference_loader, groups["train"], cfg, meta, device,
+        active_leaf_mask=active_leaf_mask)
     checkpoint_hash = file_hash(output / "best.pth")
     _save_torch(output / "support.pth", {"schema_version": SCHEMA_VERSION,
                 "checkpoint_sha256": checkpoint_hash, "signature": sig, "meta": meta,
@@ -344,11 +382,15 @@ def train(cfg, directory, device, debug=False):
 
 
 def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, meta,
-                  seed, episode_weight, anchor=None):
+                  seed, episode_weight, anchor=None, active_leaf_mask=None):
     """Reuse one live query graph across all masked references and teacher KL."""
     settings = cfg["support"]
     weights = settings.get("loss", {})
-    episodes = build_episodes(labels, meta["leaf_to_parent"], seed=seed)
+    if active_leaf_mask is None:
+        episodes = build_episodes(labels, meta["leaf_to_parent"], seed=seed)
+    else:
+        from .holdout import build_active_episodes
+        episodes = build_active_episodes(labels, meta["leaf_to_parent"], active_leaf_mask, seed)
     names = ["full"]
     if episode_weight > 0 and settings.get("episodes_enabled", True):
         names.extend(["drop_leaf", "control_leaf"])
@@ -361,6 +403,9 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
                        "episode": episode_weight * float(weights.get("episode", 1.)),
                        "paired": episode_weight * float(weights.get("paired", .25)),
                        "control": episode_weight * float(weights.get("control", .25))}
+    if settings.get("decoupled", False):
+        for key in ("membership_parent", "membership_leaf"):
+            support_weights[key] = episode_weight * float(weights.get(key, 1.))
     components = hierarchical_losses(outputs, episodes, labels, meta["leaf_to_parent"],
                                     weights=support_weights, margins=settings.get("margins", {}))
     leaf = F.cross_entropy(encoded["leaf_logits"], labels)
@@ -372,7 +417,11 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
         if temperature <= 0:
             raise ValueError("anchor_temperature must be positive")
         teacher = anchor[indices.to(anchor.device)].to(labels.device).detach()
-        anchor_loss = F.kl_div(F.log_softmax(encoded["leaf_logits"] / temperature, dim=1),
+        student = encoded["leaf_logits"]
+        if active_leaf_mask is not None:
+            active = torch.as_tensor(active_leaf_mask, dtype=torch.bool, device=student.device)
+            student, teacher = student[:, active], teacher[:, active]
+        anchor_loss = F.kl_div(F.log_softmax(student / temperature, dim=1),
                               F.softmax(teacher / temperature, dim=1), reduction="batchmean") * temperature ** 2
     total = (components["total"] + float(weights.get("leaf", 1.)) * leaf +
              float(weights.get("parent", .25)) * parent +
@@ -380,10 +429,21 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
     terms = {"encoder_leaf": leaf, "encoder_parent": parent, "anchor": anchor_loss}
     terms.update({"support_" + key: components[key] for key in
                   ("leaf", "parent", "episode", "paired", "control")})
+    if settings.get("decoupled", False):
+        for key in ("membership_parent", "membership_leaf"):
+            terms[key] = components[key]
+        representation = representation_losses(encoded, labels, meta["leaf_to_parent"],
+                                                query_hashes=query_hashes,
+                                                margin=float(settings.get("margins", {}).get("representation", .2)))
+        for key in ("parent_cross_species", "leaf_sibling"):
+            terms[key] = representation[key]
+            total = total + episode_weight * float(weights.get(key, .1)) * representation[key]
     rows = torch.arange(len(labels), device=labels.device)
     counts = {name: int((episodes["valid"][name] & torch.isfinite(
                        out["log_probs"][rows, episodes["targets"][name]])).sum())
               for name, out in outputs.items()}
+    if settings.get("decoupled", False):
+        counts.update({key: int(value) for key, value in representation.items() if key.startswith("valid_")})
     return total, terms, counts
 
 
@@ -410,7 +470,9 @@ def load_trained(cfg, directory, device):
     bank = SupportBank.from_state_dict(payload["bank"]).to(device)
     if not set(bank.hashes).issubset(set(receipt["audit"]["train"]["image_hashes"])):
         raise ValueError("Support contains content outside the audited TRAIN split")
-    encoder = SupportEncoder(make_backbone(cfg, meta, device), meta, cfg["support"]).to(device)
+    active_leaf_mask = cfg.get("strict_holdout", {}).get("active_leaf_mask")
+    encoder = SupportEncoder(make_backbone(cfg, meta, device), meta, cfg["support"],
+                             active_leaf_mask=active_leaf_mask).to(device)
     if checkpoint["dimension"] != encoder.dimension:
         raise ValueError("Checkpoint encoder dimension mismatch")
     evidence = _make_evidence(encoder, cfg, meta, device)
@@ -442,8 +504,16 @@ def collect(groups, cfg, meta, encoder, evidence, bank, device):
             output = evidence(encoded, bank)
             selected = [unique_rows[i] for i in indices.tolist()]
             seen.extend(indices.tolist())
-            scored.extend(raw_records(selected, {"log_probs": output["log_probs"].cpu().numpy()},
-                                      encoded["leaf_logits"].cpu().numpy(), meta))
+            batch_records = raw_records(selected, {"log_probs": output["log_probs"].cpu().numpy()},
+                                        encoded["leaf_logits"].cpu().numpy(), meta)
+            if cfg["support"].get("decoupled", False):
+                # Export the actual candidate evidence, rather than trying to
+                # recover it from the mixed tree probabilities during analysis.
+                diagnostic = {key: output[key].cpu().tolist() for key in (
+                    "parent_membership_logits", "leaf_membership_logits", "parent_logits", "leaf_logits")}
+                for i, record in enumerate(batch_records):
+                    record["support_evidence"] = {key: value[i] for key, value in diagnostic.items()}
+            scored.extend(batch_records)
         _sync(device)
         elapsed = time.perf_counter() - started
         if seen != list(range(len(unique_rows))):
@@ -467,6 +537,8 @@ def metrics_for(groups, router, meta):
 
 
 def calibrate_run(cfg, directory, device):
+    if cfg.get("strict_holdout"):
+        raise ValueError("TRAIN-only holdout folds cannot calibrate on real unknown development data")
     encoder, evidence, trained, bank = load_trained(cfg, directory, device)
     meta = trained["meta"]
     groups, audit = load_stage_rows(cfg, "calibrate", meta,
@@ -507,6 +579,8 @@ def calibrate_run(cfg, directory, device):
 
 
 def test_run(cfg, directory, device):
+    if cfg.get("strict_holdout"):
+        raise ValueError("TRAIN-only holdout folds cannot evaluate locked test data")
     from .calibration import unique_records
     calibrated, router_path = verify_artifact(Path(directory) / "calibration", "completed.json", "router")
     if calibrated.get("schema_version") != SCHEMA_VERSION or calibrated.get("method") != "support_conditioned":

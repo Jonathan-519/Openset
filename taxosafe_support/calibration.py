@@ -21,6 +21,8 @@ TARGETS = {
 }
 STATUSES = ("known", "intra", "extra")
 KINDS = ("global_unknown", "intra_unknown", "known")
+SELECTION_POLICIES = ("balanced", "known_first")
+LEGACY_SELECTION_RULE = "feasible first, then total normalized count deficit, mean of four metrics, known accuracy, smallest absolute biases"
 
 
 def _hierarchy(meta):
@@ -295,7 +297,79 @@ def _grid(settings, name):
     return np.unique(values)
 
 
-def _select(rows, meta, parent_grid, leaf_grid, keep_grid=True):
+def _selection_policy(settings):
+    policy = settings.get("policy", "balanced")
+    if policy not in SELECTION_POLICIES:
+        raise ValueError("Calibration policy must be balanced or known_first")
+    return policy
+
+
+def _fixed_score_feasibility(rows, meta):
+    """Necessary bounds for this fixed decoder, independent of grid extent.
+
+    Depth offsets cannot change the winning node within a depth. Correct known
+    leaves require leaf > root and leaf > parent; correct parent fallback permits
+    a parent/leaf tie. The resulting order statistics can prove contradictions.
+    Absence of such a contradiction does NOT establish joint feasibility (in
+    particular, the open-world precision constraint is not proved here).
+    """
+    values, p, _, mapping = _scores(rows, meta)
+    status = np.asarray([r["status"] for r in rows])
+    known, near, extra = (status == s for s in STATUSES)
+    parent = values[:, 1:1 + p].argmax(1)
+    leaf = values[:, 1 + p:].argmax(1)
+    true_parent = np.asarray([-1 if r.get("true_parent") is None else r["true_parent"] for r in rows])
+    true_leaf = np.asarray([-1 if r.get("true_leaf") is None else r["true_leaf"] for r in rows])
+    correct_known = known & (leaf == true_leaf) & (mapping[leaf] == true_parent)
+    correct_near = near & (parent == true_parent)
+    need_known = 9 * int(known.sum()) // 10 + 1
+    need_near = (17 * int(near.sum()) + 19) // 20
+    need_extra = 9 * int(extra.sum()) // 10 + 1
+    leaf_score, parent_score = values[:, 1 + p:].max(1), values[:, 1:1 + p].max(1)
+    margin = leaf_score - parent_score
+    root_minus_leaf = values[:, 0] - leaf_score
+    contradictions, bounds = [], {}
+    if correct_known.sum() < need_known:
+        contradictions.append("known_candidate_accuracy_below_required")
+    else:
+        delta_upper = float(np.sort(margin[correct_known])[-need_known])
+        leaf_lower = float(np.sort(root_minus_leaf[correct_known])[need_known - 1])
+        bounds.update({
+            "known_requires_parent_minus_leaf_bias_strictly_below": delta_upper,
+            "known_requires_leaf_bias_strictly_above": leaf_lower,
+            "near_correct_upper_bound_given_known_ignoring_root": int(np.sum(correct_near & (margin < delta_upper))),
+            "extra_correct_upper_bound_given_known_ignoring_parent": int(np.sum(extra & (root_minus_leaf > leaf_lower))),
+        })
+        extra_upper = float(np.sort(root_minus_leaf[extra])[-need_extra])
+        bounds["extra_requires_leaf_bias_at_most"] = extra_upper
+        if leaf_lower >= extra_upper:
+            contradictions.append("known_and_extra_require_incompatible_leaf_bias")
+    if correct_near.sum() < need_near:
+        contradictions.append("near_parent_candidate_accuracy_below_required")
+    else:
+        delta_lower = float(np.sort(margin[correct_near])[need_near - 1])
+        bounds["near_requires_parent_minus_leaf_bias_at_least"] = delta_lower
+        if correct_known.sum() >= need_known and delta_lower >= bounds["known_requires_parent_minus_leaf_bias_strictly_below"]:
+            contradictions.append("known_and_near_require_incompatible_depth_difference")
+    return {
+        "scope": "fixed saved development log_probs and joint-tree two-bias argmax only",
+        "required_correct": {"known": need_known, "intra": need_near, "extra": need_extra},
+        "candidate_correct": {"known": int(correct_known.sum()), "intra": int(correct_near.sum())},
+        "necessary_bounds": bounds,
+        "continuous_infeasibility_proven": bool(contradictions),
+        "contradictions": contradictions,
+        "interpretation": "Contradictions are necessary-condition proofs for these fixed scores; no contradiction means not proven, not feasible. No claim about retrained scores or another decoder.",
+    }
+
+
+def fixed_score_feasibility(known, near, extra, meta):
+    """Development-only diagnostic; never fit or diagnose thresholds on test."""
+    rows, _ = _fit_inputs(known, near, extra, meta)
+    return _fixed_score_feasibility(rows, meta)
+
+
+def _select(rows, meta, parent_grid, leaf_grid, keep_grid=True, policy="balanced"):
+    _selection_policy({"policy": policy})
     values, p, _, mapping = _scores(rows, meta)
     # Maximizing within a depth is unaffected by that depth's scalar offset.
     base = np.c_[values[:, 0], values[:, 1:1 + p].max(1), values[:, 1 + p:].max(1)]
@@ -307,7 +381,7 @@ def _select(rows, meta, parent_grid, leaf_grid, keep_grid=True):
     true_leaf = np.asarray([-1 if r.get("true_leaf") is None else r["true_leaf"] for r in rows])
     totals = {s: int(np.sum(status == s)) for s in STATUSES}
     best, points, maxima = None, [], {name: 0. for name in TARGETS}
-    feasible = 0
+    feasible, known_feasible = 0, 0
     for pb in parent_grid:
         for lb in leaf_grid:
             depth = (base + np.asarray([0., pb, lb])).argmax(1)
@@ -323,16 +397,31 @@ def _select(rows, meta, parent_grid, leaf_grid, keep_grid=True):
             # The objective is fixed, group-balanced, and never learned per source.
             key = (report["targets_passed"], -deficit, float(np.mean(rates)), rates[0],
                    -abs(float(pb)) - abs(float(lb)), -float(pb), -float(lb))
+            known_passed = report["checks"]["known_end_to_end_leaf_accuracy"]
+            if policy == "known_first":
+                # Joint feasibility always wins. Otherwise, if ANY sampled point
+                # preserves known accuracy, restrict best effort to that set.
+                # If none does, retain the legacy compromise and say so clearly.
+                key = (key[0], known_passed) + key[1:]
             if best is None or key > best[0]:
                 best = key, float(pb), float(lb), report
             feasible += int(report["targets_passed"])
+            known_feasible += int(known_passed)
             for name, rate in report["metrics"].items():
                 maxima[name] = max(maxima[name], 0. if rate is None else rate)
             if keep_grid:
                 points.append({"parent_bias": float(pb), "leaf_bias": float(lb),
                                **report["metrics"], "targets_passed": report["targets_passed"]})
+    if feasible:
+        selection_status = "feasible"
+    elif policy == "known_first":
+        selection_status = "best_effort_known_preserved" if known_feasible else "best_effort_known_unavailable"
+    else:
+        selection_status = "best_effort"
     return {"parent_bias": best[1], "leaf_bias": best[2], "report": best[3],
             "sampled_feasible_count": feasible, "sampled_point_count": len(parent_grid) * len(leaf_grid),
+            "sampled_known_feasible_count": known_feasible, "selection_policy": policy,
+            "status": selection_status, "best_effort": not bool(feasible),
             "individual_sampled_maxima": maxima, "points": points}
 
 
@@ -344,6 +433,7 @@ def source_loo(known, near, extra, meta, settings=None):
     explicit grids also avoid indirectly selecting candidates from the holdout.
     """
     settings = dict(settings or {})
+    policy = _selection_policy(settings)
     rows, _ = _fit_inputs(known, near, extra, meta)
     pg, lg = _grid(settings, "parent_bias_grid"), _grid(settings, "leaf_bias_grid")
     folds, skipped = [], []
@@ -355,11 +445,12 @@ def source_loo(known, near, extra, meta, settings=None):
         for held in sources:
             holdout = [r for r in rows if r["status"] == status and str(r.get("source", "unspecified")) == held]
             fitted = [r for r in rows if not (r["status"] == status and str(r.get("source", "unspecified")) == held)]
-            result = _select(fitted, meta, pg, lg, keep_grid=False)
+            result = _select(fitted, meta, pg, lg, keep_grid=False, policy=policy)
             state = {"parent_bias": result["parent_bias"], "leaf_bias": result["leaf_bias"]}
             decoded = decode_records(holdout, state, meta)
             folds.append({"status": status, "held_source": held, **state,
                           "fit_count": len(fitted), "fit_targets_passed": result["report"]["targets_passed"],
+                          "selection_policy": policy, "fit_selection_status": result["status"],
                           "fit_sources": sorted({str(r.get("source", "unspecified")) for r in fitted if r["status"] == status}),
                           "held_metrics": _group_report(decoded, status)})
     return {"available": bool(folds), "folds": folds, "skipped": skipped,
@@ -371,12 +462,15 @@ def calibrate(known, near, extra, meta, settings=None):
 
     fit_completed means the finite grid search ran. It is deliberately independent
     of targets_passed. A failed target never silently lowers its success threshold.
+    Optional policy="known_first" protects the known gate within the sampled
+    grid when joint feasibility fails. The default balanced policy is unchanged.
     """
     settings = dict(settings or {})
+    policy = _selection_policy(settings)
     known, near, extra = list(known), list(near), list(extra)
     rows, input_count = _fit_inputs(known, near, extra, meta)
     pg, lg = _grid(settings, "parent_bias_grid"), _grid(settings, "leaf_bias_grid")
-    selected = _select(rows, meta, pg, lg)
+    selected = _select(rows, meta, pg, lg, policy=policy)
     state = {"schema_version": SCHEMA_VERSION, "meta": copy.deepcopy(meta),
              "parent_bias": selected["parent_bias"], "leaf_bias": selected["leaf_bias"],
              "root_bias": 0., "fit_completed": True,
@@ -394,12 +488,24 @@ def calibrate(known, near, extra, meta, settings=None):
     report["fit_completed"] = True
     report["sampled_feasible_count"] = selected["sampled_feasible_count"]
     report["individual_sampled_maxima"] = selected["individual_sampled_maxima"]
+    selection_diagnostics = {
+        "sampled_known_feasible_count": selected["sampled_known_feasible_count"],
+        "known_feasible_on_grid": bool(selected["sampled_known_feasible_count"]),
+        "selected_known_gate_passed": report["checks"]["known_end_to_end_leaf_accuracy"],
+        "known_preservation_scope": "declared development grid only",
+    }
+    for output in (state, report):
+        output.update({"selection_policy": policy, "status": selected["status"],
+                       "best_effort": selected["best_effort"],
+                       "selection_diagnostics": copy.deepcopy(selection_diagnostics)})
     report["infeasibility"] = {
         "no_feasible_sampled_point": selected["sampled_feasible_count"] == 0,
         "failed_at_selected_point": [name for name, passed in report["checks"].items() if not passed],
         "scope": "finite declared grid only; not a proof of continuous infeasibility",
-        "selection_rule": "feasible first, then total normalized count deficit, mean of four metrics, known accuracy, smallest absolute biases",
+        "selection_rule": LEGACY_SELECTION_RULE if policy == "balanced" else
+                          "feasible first; otherwise restrict to known-passing sampled points if available, then the legacy deficit objective; if none, explicitly report known unavailable",
     }
+    report["fixed_score_feasibility"] = _fixed_score_feasibility(rows, meta)
     state["validation_report"] = report
     state["source_loo"] = (source_loo(known, near, extra, meta, settings)
                            if settings.get("source_loo", True) else
@@ -412,5 +518,8 @@ def calibrate(known, near, extra, meta, settings=None):
     binding = {"meta": meta, "hashes": state["fit_image_sha256"], "evidence_sha256": state["evidence_sha256"],
                "parent_bias": state["parent_bias"],
                "leaf_bias": state["leaf_bias"], "grid": state["grid"], "targets": TARGETS}
+    if policy != "balanced":
+        # Preserve legacy calibration hashes while binding an opted-in policy.
+        binding["selection_policy"] = policy
     state["calibration_sha256"] = hashlib.sha256(json.dumps(binding, sort_keys=True, allow_nan=False).encode()).hexdigest()
     return state
