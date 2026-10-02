@@ -7,7 +7,8 @@ from torch.nn import functional as F
 
 from taxosafe_support.episodes import build_episodes
 from taxosafe_support.evidence import HierarchicalEvidence
-from taxosafe_support.losses import hierarchical_losses, reference_pair_losses, reference_supervision_counts
+from taxosafe_support.losses import (_reference_supervision_masks, hierarchical_losses,
+                                    reference_pair_losses, reference_supervision_counts)
 from taxosafe_support.reference import aggregate_reference_logits, bidirectional_local_coverage
 from taxosafe_support.support import SupportBank
 from tests.test_taxosafe_support_core import MAPPING, fixture
@@ -122,6 +123,57 @@ class ReferenceEvidenceTest(unittest.TestCase):
         masked = self.model()(encoded, bank, mask)
         self.assertEqual(reference_supervision_counts(masked, torch.arange(5), MAPPING)
                          ["parent_singleton_fallback_positive_pairs"], 0)
+
+    def test_partial_bank_singletons_match_integer_counting(self):
+        # Parent 0 has two leaves, parent 1 has one present leaf, and parent 2
+        # has none. Query exclusions must not alter these BANK-level roles.
+        for device in ["cpu"] + (["cuda"] if torch.cuda.is_available() else []):
+            with self.subTest(device=device):
+                out = {"reference_allowed": torch.tensor(
+                    [[False, True, True], [False, True, True], [True, True, True]], device=device),
+                    "reference_labels": torch.tensor([0, 1, 2], device=device),
+                    "reference_leaf_present": torch.tensor([True, True, True, False, False], device=device),
+                    "active_parents": torch.ones(3, 3, dtype=torch.bool, device=device)}
+                masks = _reference_supervision_masks(out, [0, 2, 4], MAPPING)
+                expected_cross = torch.tensor([[False, True, False], [False] * 3, [False] * 3], device=device)
+                expected_fallback = torch.tensor([[False] * 3, [False, False, True], [False] * 3], device=device)
+                self.assertTrue(torch.equal(masks["parent_cross_species"], expected_cross))
+                self.assertTrue(torch.equal(masks["parent_singleton_fallback"], expected_fallback))
+                filtered = _reference_supervision_masks(out, [0, 2, 4], MAPPING, [True, False, True])
+                self.assertFalse(bool(filtered["parent_singleton_fallback"].any()))
+                for mask in filtered.values():
+                    self.assertFalse(bool(mask[1].any()))
+
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA device required for reference training regression")
+    def test_cuda_reference_training_loss_and_backward(self):
+        # Exercise the reported failure through all five support interventions,
+        # including the separate audit-count path and local-token gradients.
+        bank, encoded = fixture()
+        bank = bank.to("cuda")
+        encoded = {key: value.detach().to("cuda").requires_grad_() for key, value in encoded.items()}
+        model = self.model().to("cuda")
+        for head in (model.parent_reference, model.fine_reference):
+            torch.nn.init.constant_(head.residual[-1].weight, .04)
+        labels = torch.arange(5, device="cuda")
+        episodes = build_episodes(labels, MAPPING)
+        pairs = model.reference_pairs(encoded, bank)
+        outputs = {name: model(encoded, bank, mask, query_hashes=list(bank.hashes)[::3],
+                               reference_pair_logits=pairs)
+                   for name, mask in episodes["masks"].items()}
+        counts = reference_supervision_counts(outputs["full"], labels, MAPPING)
+        self.assertEqual(counts["parent_cross_species_positive_pairs"], 12)
+        self.assertEqual(counts["parent_singleton_fallback_positive_pairs"], 2)
+        self.assertEqual(counts["leaf_positive_pairs"], 10)
+        losses = hierarchical_losses(outputs, episodes, labels, MAPPING)
+        loss = sum(losses["reference_" + level] for level in ("parent", "leaf"))
+        self.assertTrue(bool(torch.isfinite(loss)))
+        loss.backward()
+        for value in encoded.values():
+            self.assertIsNotNone(value.grad)
+            self.assertTrue(bool(torch.isfinite(value.grad).all()))
+            self.assertGreater(float(value.grad.abs().sum()), 0.)
+        for head in (model.parent_reference, model.fine_reference):
+            self.assertGreater(float(head.residual[-1].weight.grad.abs().sum()), 0.)
 
     @staticmethod
     def synthetic_output(leaf_scores, labels, mapping):

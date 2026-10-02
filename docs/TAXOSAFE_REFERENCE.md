@@ -248,3 +248,18 @@ python -u test_taxosafe_new.py --config configs/Zooplankton_Taxonomic_Tree/TaxoS
 原算法入口与旧默认配置保留，新的成员性路径由新配置选择。当前源码可以为旧算法建立新 run，但旧产物的哈希签名不会自动兼容新源码；历史分析使用对应源码版本。新训练遵守 known-only 梯度，不改变原图、测试清单及旧运行目录。
 
 单次视觉前向、有限参考预算和小型关系头用于控制计算成本，但真实 GPU 速度、显存及四项性能仍待本次实验测量。CPU 测试、预检或冻结校准完成只能证明相应软件步骤完成，不能证明四项 gate 通过，更不能证明达到 SOTA。
+
+## 8. CUDA 整数矩阵乘法启动错误
+
+如果旧版在 `losses.py` 的 `species_per_parent` 处报错 `"addmm_cuda" not implemented for 'Long'`，这是父类物种计数使用了 CUDA 不支持的整数矩阵乘法。修复版使用逐元素整数乘法后求和，计数、单子类回退规则、损失定义和配置保持不变，不需要为此更换 CUDA 或 PyTorch。
+
+更新 `taxosafe_support/losses.py` 和 `tests/test_taxosafe_support_reference.py` 后，在已激活的 `ProTeCt` 环境运行无需数据或 CLIP 下载的 GPU 回归检查：
+
+```bash
+python -c 'import torch; assert torch.cuda.is_available(), "CUDA unavailable"'
+python -m unittest tests.test_taxosafe_support_reference.ReferenceEvidenceTest.test_cuda_reference_training_loss_and_backward -v
+```
+
+该测试覆盖参考损失、父类计数、自身内容排除和反向传播；无 CUDA 的环境会明确跳过，跳过不能视作 GPU 验证成功。
+
+失败运行已经创建了 `training/`，不能原地覆盖重跑。使用新的空目录，例如 `runs/taxosafe_new/reference/trial_1_cuda_fix`，让训练、校准和测试始终使用同一个新 `--run-dir`。原命令用 `&&` 连接，因此训练出错后校准和测试并未执行。第一次损失计算即失败时，尚未完成优化器更新，无需尝试恢复该次训练。

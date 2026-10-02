@@ -44,7 +44,9 @@ def _reference_supervision_masks(full_output, labels, leaf_to_parent, valid_rows
     # query mask. Losing a sibling to self-hash exclusion is not a singleton.
     present = full_output["reference_leaf_present"].to(device)
     assignment = F.one_hot(mapping, full_output["active_parents"].shape[1]).to(torch.long)
-    species_per_parent = present.to(torch.long) @ assignment
+    # CUDA does not support Long matrix multiplication. Elementwise integer
+    # multiplication and reduction preserve the exact bank-level counts.
+    species_per_parent = (present.to(torch.long)[:, None] * assignment).sum(dim=0)
     singleton = species_per_parent[mapping[labels]] == 1
     cross_species = allowed & same_parent & ~same_leaf
     singleton_fallback = allowed & same_leaf & singleton[:, None]
