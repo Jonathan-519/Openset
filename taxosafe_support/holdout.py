@@ -210,7 +210,7 @@ def score_fold(encoder, evidence, bank, cfg, meta, groups, fold, device):
     evidence.eval()
     active = torch.tensor(fold["active_leaf_mask"], dtype=torch.bool, device=device)
     mapping = torch.tensor(meta["leaf_to_parent"], dtype=torch.long, device=device)
-    reference_membership = cfg["support"].get("membership", "prototype") == "reference"
+    reference_membership = cfg["support"].get("membership", "prototype") in ("reference", "relation")
     offset = 1 + len(meta["parent_names"])
     text_features = encoder.text_features()
     records = []

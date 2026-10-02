@@ -1,0 +1,147 @@
+{
+  "schema": "taxosafe_relation_software_verification_v1",
+  "verified_at_utc": "2026-10-02T17:18:01.821256+00:00",
+  "base_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+  "method": "support_relation_v4",
+  "unit_tests": {
+    "command": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python tools/run_unit_tests.py --quiet",
+    "discovered": 300,
+    "passed": 296,
+    "skipped_cuda": 4,
+    "failed": 0,
+    "seconds": 13.128,
+    "status": "passed_with_cuda_tests_skipped",
+    "followup_check": "Strengthened relation strict species/parent fold candidate-export assertions passed separately."
+  },
+  "static_checks": {
+    "python_files_parsed": 175,
+    "evidence_parameters": {
+      "reference": 646,
+      "relation": 41606
+    },
+    "extra_relation_parameters": 40960,
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "cli_help_verified": [
+      "train_taxosafe_new.py",
+      "calibrate_taxosafe_new.py",
+      "test_taxosafe_new.py",
+      "tools/validate_taxosafe_support_holdout.py",
+      "tools/pack_taxosafe_new_review.py"
+    ]
+  },
+  "legacy_compatibility": {
+    "legacy_v1": {
+      "baseline_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+      "direct_fixture_cases": 6,
+      "state_keys_values_and_rng_after_init": "bit_exact",
+      "all_five_support_interventions": "bit_exact",
+      "training_loss_terms_valid_counts": "bit_exact",
+      "encoded_input_and_parameter_gradients": "bit_exact",
+      "tiny_backbone_encoder_input_and_parameter_gradients": "bit_exact",
+      "known_validation_default": "bit_exact",
+      "one_query_visual_forward_reused_for_interventions": true
+    },
+    "prototype_v2": {
+      "baseline_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+      "direct_fixture_cases": 6,
+      "state_keys_values_and_rng_after_init": "bit_exact",
+      "all_five_support_interventions": "bit_exact",
+      "training_loss_terms_valid_counts": "bit_exact",
+      "encoded_input_and_parameter_gradients": "bit_exact",
+      "tiny_backbone_encoder_input_and_parameter_gradients": "bit_exact",
+      "known_validation_default": "bit_exact",
+      "one_query_visual_forward_reused_for_interventions": true
+    },
+    "reference_v3": {
+      "baseline_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+      "direct_fixture_cases": 6,
+      "state_keys_values_and_rng_after_init": "bit_exact",
+      "all_five_support_interventions": "bit_exact",
+      "training_loss_terms_valid_counts": "bit_exact",
+      "encoded_input_and_parameter_gradients": "bit_exact",
+      "tiny_backbone_encoder_input_and_parameter_gradients": "bit_exact",
+      "known_validation_default": "bit_exact",
+      "one_query_visual_forward_reused_for_interventions": true
+    }
+  },
+  "independent_code_review": {
+    "review_type": "independent read-only correctness inspection",
+    "critical_bugs_found": [],
+    "scope": [
+      "relation pairs and local matching",
+      "batch-local graph cache",
+      "query-content and episode support permissions",
+      "negative mining and exposure count consistency"
+    ],
+    "findings": [
+      "Query/reference coordinate projection is row-local and shared; references detach before projection while projection parameters retain gradients.",
+      "Local matching weights combine both directions; exact nearest ties receive equal weights; each direction normalizes over its own token count.",
+      "Raw pair graph is batch-local and reused explicitly; forward validates query dictionary identity and bank object identity before reuse.",
+      "Both parent/fine raw pairs are masked with bank.permitted result before aggregation, BCE, and negative selection; removed leaves/self hashes cannot become top-k witnesses or mined negatives.",
+      "Negative mining operates per query and reference leaf using detached raw verifier logits, selects only permissions-approved negatives, and leaves all positive pairs intact.",
+      "Equal-leaf and equal-group BCE weighting is preserved; exposure audits call the identical selector with the same head-specific scores.",
+      "No identified Long matrix multiplication introduced in relation or mining paths; existing CUDA count fix remains elementwise integer multiply-and-sum."
+    ],
+    "limitations": [
+      "No CUDA device available to execute GPU paths.",
+      "Cache object-identity check intentionally relies on documented caller contract against in-place encoded/bank mutation or cross-optimizer reuse; pipeline respects the contract."
+    ],
+    "reviewed_source_sha256": {
+      "taxosafe_support/evidence.py": "e199cf65ebef70756cfed53391f0e2c77e2cf72dc3dcfd2603d0a34d51d95bdd",
+      "taxosafe_support/reference.py": "9492b796808905001ac8276cd1140db713cd64dfe5fbad38cb8208ec551d7119",
+      "taxosafe_support/relation.py": "34a5e178d49ede71adf3c893ccaf7e2552348a0b4dba87888d5b5e3f5d6b8c81",
+      "taxosafe_support/losses.py": "fceb8d68b11915f96d33c6d81d74e95386edbf61dfce783747a2a6e2d19c2bf3",
+      "taxosafe_support/pipeline.py": "66413e2b111162e0f3ec0dd24e5e79abfeda20f0828948d4b7e22077ba8a798d",
+      "taxosafe_support/support.py": "84a09488498c2266cce872aede3c10f105d3634fdf789353e814f1ee2ce38106",
+      "taxosafe_support/holdout.py": "0f970cfe3ed9c84fb0aa109de7c8ea6ab6ee69d63ca3f6ebf742d70a7e203071"
+    }
+  },
+  "contracts": [
+    "One query backbone pass and one pair graph shared across support interventions.",
+    "Pair symmetry, exact nearest-match ties, token/reference permutation, and chunked gradient equivalence.",
+    "Directional coordinate features distinguish constructed pairs with equal original scalar evidence.",
+    "Self-content and episode exclusions before pooling, pair loss, and hard-negative selection.",
+    "TRAIN cache detached; query/local/projection/head gradients retained.",
+    "Hard negatives selected per reference leaf; all allowed positives and balanced groups retained.",
+    "Negative exposure audits reuse the loss selector and count only selected effective negative pairs.",
+    "Empty support permissions have finite backward and zero forbidden contribution.",
+    "Known-only candidate checkpoint selection matches deployment identity rule without thresholds.",
+    "Diagnostics detached and absent from loss weighting or model selection.",
+    "Synthetic CPU train/calibrate/test with content deduplication, immutable stage signatures and artifact hashes.",
+    "Synthetic strict TRAIN-only species and parent fold retraining; raw candidate export, no membership thresholds applied."
+  ],
+  "unchanged_experiment_controls": {
+    "data_manifests": true,
+    "data_transform_main": "center_crop",
+    "max_references_per_leaf": 8,
+    "max_epochs": 120,
+    "warmup_epochs": 5,
+    "patience": 25,
+    "training_loss_weights": true,
+    "gates": true,
+    "development_calibration_algorithm": true,
+    "legacy_cli_defaults": true
+  },
+  "experiment_result_audit": {
+    "artifact": "docs/REFERENCE_TRIAL1_AUDIT_20261003.json",
+    "scope": "Uploaded trained reference-v3 run, NOT relation-v4 performance",
+    "archive_members_checked": 19,
+    "unique_test_images": 926,
+    "test_used_for_hyperparameter_or_threshold_search": false
+  },
+  "new_relation_model_experiments": {
+    "real_image_training_completed": false,
+    "real_image_test_metrics_available": false,
+    "cuda_execution_verified_in_this_environment": false,
+    "real_image_strict_holdout_completed": false,
+    "gpu_latency_or_memory_measured": false
+  },
+  "limits": [
+    "CPU software checks do not establish CUDA execution or recognition improvement.",
+    "No original image/checkpoint/support binaries were included in the review package.",
+    "Reference v3 TEST was inspected for requested reporting; development design evidence came from TRAIN/DEV and code constraints. A future final paper needs an evaluation not repeatedly used for development.",
+    "Strict TRAIN fold reported decisions remain uncalibrated joint argmax, not the calibrated production membership decoder.",
+    "Historical run signatures bind their original source; old artifacts require their corresponding original source snapshot."
+  ]
+}

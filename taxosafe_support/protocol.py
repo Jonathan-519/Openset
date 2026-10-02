@@ -34,19 +34,34 @@ def effective_config(path, variant="main", seed=1):
     if not isinstance(settings.get("decoupled", False), bool):
         raise ValueError("support.decoupled must be a YAML boolean")
     membership = settings.get("membership", "prototype")
-    if membership not in ("prototype", "reference"):
-        raise ValueError("support.membership must be prototype or reference")
-    if membership == "reference" and not settings.get("decoupled", False):
+    if membership not in ("prototype", "reference", "relation"):
+        raise ValueError("support.membership must be prototype, reference or relation")
+    if membership in ("reference", "relation") and not settings.get("decoupled", False):
         raise ValueError("Reference membership requires support.decoupled=true")
-    if membership == "reference" or "reference_topk" in settings:
+    if membership in ("reference", "relation") or "reference_topk" in settings:
         topk = settings.get("reference_topk", 2)
         if isinstance(topk, bool) or not isinstance(topk, int) or not 1 <= topk <= int(settings.get("max_per_leaf", 8)):
             raise ValueError("support.reference_topk must be an integer between 1 and max_per_leaf")
+    if membership == "relation":
+        dimension = settings.get("relation_dim", 32)
+        if isinstance(dimension, bool) or not isinstance(dimension, int) or not 1 <= dimension <= 512:
+            raise ValueError("support.relation_dim must be an integer in [1,512]")
+    elif "relation_dim" in settings or "pair_negative_topk" in settings:
+        raise ValueError("Relation settings require support.membership=relation")
+    if "pair_negative_topk" in settings:
+        topk = settings["pair_negative_topk"]
+        if isinstance(topk, bool) or not isinstance(topk, int) or not 1 <= topk <= int(settings.get("max_per_leaf", 8)):
+            raise ValueError("support.pair_negative_topk must be an integer between 1 and max_per_leaf")
     decoder = cfg.get("calibration", {}).get("decoder", "joint")
     if decoder not in ("joint", "membership"):
         raise ValueError("calibration.decoder must be joint or membership")
     if decoder == "membership" and not settings.get("decoupled", False):
         raise ValueError("Membership decoding requires support.decoupled=true")
+    selection = cfg["training"].get("selection", "text")
+    if selection not in ("text", "candidate"):
+        raise ValueError("training.selection must be text or candidate")
+    if selection == "candidate" and decoder != "membership":
+        raise ValueError("Candidate checkpoint selection requires membership decoding")
     if decoder == "membership":
         calibration = cfg["calibration"]
         if calibration.get("threshold_grid", "quantile") != "quantile":
@@ -111,7 +126,9 @@ def signature(cfg):
         "train_taxosafe_new.py", "calibrate_taxosafe_new.py", "test_taxosafe_new.py",
         "tools/validate_taxosafe_support_holdout.py")]
     result["support_code"] = object_hash({str(p.relative_to(PROJECT_ROOT)): file_hash(p) for p in paths})
-    if cfg["support"].get("membership", "prototype") == "reference":
+    if cfg["support"].get("membership", "prototype") == "relation":
+        result["method"] = "support_relation_v4"
+    elif cfg["support"].get("membership", "prototype") == "reference":
         result["method"] = "support_reference_v3"
     else:
         result["method"] = "support_decoupled_v2" if cfg["support"].get("decoupled", False) else "support_conditioned_v1"

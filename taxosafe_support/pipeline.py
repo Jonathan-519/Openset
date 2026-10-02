@@ -165,10 +165,14 @@ def reference_bank(encoder, loader, rows, cfg, meta, device, collect_anchor=Fals
 
 
 @torch.no_grad()
-def known_validation(encoder, evidence, bank, loader, meta, device, selection_splits=None):
+def known_validation(encoder, evidence, bank, loader, meta, device, selection_splits=None,
+                     selection="text"):
+    if selection not in ("text", "candidate"):
+        raise ValueError("Known checkpoint selection must be text or candidate")
     encoder.eval()
     evidence.eval()
     correct, structured_correct, nll, count = 0, 0, 0., 0
+    candidate_correct = 0
     leaf_offset = 1 + len(meta["parent_names"])
     text_features = encoder.text_features()
     for images, labels, _ in loader:
@@ -177,13 +181,33 @@ def known_validation(encoder, evidence, bank, loader, meta, device, selection_sp
         output = evidence(encoded, bank)
         correct += int((encoded["leaf_logits"].argmax(1) == labels).sum())
         structured_correct += int((output["log_probs"].argmax(1) == labels + leaf_offset).sum())
+        if selection == "candidate":
+            # Match the production membership decoder's identity rule without
+            # using thresholds or any real unknown images for model selection.
+            parent = output["parent_logits"].argmax(1)
+            mapping = torch.as_tensor(meta["leaf_to_parent"], device=labels.device)
+            permitted = mapping[None, :] == parent[:, None]
+            candidate = output["leaf_logits"].masked_fill(~permitted, -torch.inf).argmax(1)
+            candidate_correct += int((candidate == labels).sum())
         nll += float(F.nll_loss(output["log_probs"], labels + leaf_offset, reduction="sum"))
         count += len(labels)
     if not count:
         raise ValueError("Known validation split is empty")
-    return {"leaf_accuracy": correct / count, "uncalibrated_e2e": structured_correct / count,
+    result = {"leaf_accuracy": correct / count, "uncalibrated_e2e": structured_correct / count,
             "structured_nll": nll / count, "count": count,
             "selection_splits": selection_splits or ["val_known"], "unknown_data_used": False}
+    if selection == "candidate":
+        result.update(candidate_leaf_accuracy=candidate_correct / count,
+                      selection_rule="candidate_leaf_accuracy_then_structured_nll",
+                      membership_thresholds_applied=False)
+    return result
+
+
+def _selection_key(validation, selection="text"):
+    if selection not in ("text", "candidate"):
+        raise ValueError("Known checkpoint selection must be text or candidate")
+    metric = "candidate_leaf_accuracy" if selection == "candidate" else "leaf_accuracy"
+    return validation[metric], -validation["structured_nll"]
 
 
 def _save_checkpoint(path, encoder, evidence, cfg, meta, epoch, validation):
@@ -195,13 +219,15 @@ def _save_checkpoint(path, encoder, evidence, cfg, meta, epoch, validation):
 
 def _make_evidence(encoder, cfg, meta, device):
     settings = cfg["support"]
+    extra = ({"relation_dim": int(settings.get("relation_dim", 32))}
+             if settings.get("membership", "prototype") == "relation" else {})
     return HierarchicalEvidence(encoder.dimension, meta["leaf_to_parent"],
                                 hidden_dim=int(settings.get("hidden_dim", 32)),
                                 temperature=float(settings.get("temperature", .1)),
                                 local_enabled=bool(settings.get("local_enabled", True)),
                                 decoupled=bool(settings.get("decoupled", False)),
                                 membership_mode=settings.get("membership", "prototype"),
-                                reference_topk=settings.get("reference_topk", 2)).to(device)
+                                reference_topk=settings.get("reference_topk", 2), **extra).to(device)
 
 
 def _optimizer(encoder, evidence, settings):
@@ -276,10 +302,16 @@ def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
                          "query_backbone_passes_per_step": 1,
                          "references_per_leaf_max": int(cfg["support"].get("max_per_leaf", 8)),
                          "speed_parity_with_v11": "unmeasured; compare same hardware and manifest"}
-    if cfg["support"].get("membership", "prototype") == "reference":
-        parameters_report.update(membership="reference", reference_topk=int(cfg["support"].get("reference_topk", 2)),
+    if cfg["support"].get("membership", "prototype") in ("reference", "relation"):
+        parameters_report.update(membership=cfg["support"]["membership"], reference_topk=int(cfg["support"].get("reference_topk", 2)),
                                  pair_supervision="full_support_only; query content excluded",
                                  parent_positive_pairs="same parent, different leaf; singleton fallback logged")
+    if cfg["support"].get("membership", "prototype") == "relation":
+        parameters_report.update(relation_dim=int(cfg["support"].get("relation_dim", 32)),
+                                 pair_negative_topk=cfg["support"].get("pair_negative_topk"),
+                                 reference_pair_selection=("per_leaf_topk_negative/all_positive"
+                                     if "pair_negative_topk" in cfg["support"] else "all_allowed_pairs"),
+                                 checkpoint_selection=settings.get("selection", "text"))
     write_json(output / "model_cost.json", parameters_report)
     best_key, best_epoch, best_validation, bad_epochs = None, None, None, 0
     episode_epochs, exposure = 0, {}
@@ -291,7 +323,7 @@ def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
         evidence.train()
         ramp = (min(1., max(0., (epoch - warmup + 1) /
                 max(1, int(settings.get("episode_ramp_epochs", 5))))) if use_episodes else 0.)
-        totals, counts, steps = {}, {}, 0
+        totals, diagnostics, counts, steps = {}, {}, {}, 0
         _sync(device)
         step_started = time.perf_counter()
         for step, (images, labels, indices) in enumerate(train_loader):
@@ -311,7 +343,11 @@ def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
                                            error_if_nonfinite=True)
             optimizer.step()
             for key, value in dict(terms, total=loss).items():
-                totals[key] = totals.get(key, 0.) + float(value.detach())
+                if key.startswith("diagnostic_"):
+                    diagnostic = key[len("diagnostic_"):]
+                    diagnostics[diagnostic] = diagnostics.get(diagnostic, 0.) + float(value.detach())
+                else:
+                    totals[key] = totals.get(key, 0.) + float(value.detach())
             for key, count in valid_counts.items():
                 counts[key] = counts.get(key, 0) + int(count)
                 exposure[key] = exposure.get(key, 0) + int(count)
@@ -335,11 +371,12 @@ def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
         _sync(device)
         validation_started = time.perf_counter()
         validation = known_validation(encoder, evidence, bank, val_loader, meta, device,
-                                      selection_splits=selection_splits)
+                                      selection_splits=selection_splits,
+                                      selection=settings.get("selection", "text"))
         _sync(device)
         validation_seconds = time.perf_counter() - validation_started
         eligible = epoch + 1 >= warmup + minimum and episode_epochs >= minimum
-        key = (validation["leaf_accuracy"], -validation["structured_nll"])
+        key = _selection_key(validation, settings.get("selection", "text"))
         if eligible and (best_key is None or key > best_key):
             best_key, best_epoch, best_validation, bad_epochs = key, epoch + 1, validation, 0
             _save_checkpoint(output / "best.pth", encoder, evidence, cfg, meta, best_epoch, validation)
@@ -354,6 +391,8 @@ def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
                              "validation_seconds": validation_seconds,
                              "initial_reference_seconds": reference_seconds if epoch == 0 else 0.},
                   "elapsed_seconds": time.perf_counter() - started}
+        if diagnostics:
+            record["diagnostics"] = {key: value / steps for key, value in diagnostics.items()}
         with open(output / "train.jsonl", "a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, allow_nan=False) + "\n")
         print(json.dumps(record, allow_nan=False), flush=True)
@@ -403,7 +442,7 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
         if settings.get("parent_holdout_enabled", True):
             names.extend(["drop_parent", "control_parent"])
     kwargs = {}
-    if settings.get("membership", "prototype") == "reference":
+    if settings.get("membership", "prototype") in ("reference", "relation"):
         # Explicit batch-local reuse keeps the pair/local graph attached while
         # each intervention independently masks and pools the same raw pairs.
         kwargs["reference_pair_logits"] = evidence.reference_pairs(encoded, bank)
@@ -417,11 +456,15 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
     if settings.get("decoupled", False):
         for key in ("membership_parent", "membership_leaf"):
             support_weights[key] = episode_weight * float(weights.get(key, 1.))
-    if settings.get("membership", "prototype") == "reference":
+    if settings.get("membership", "prototype") in ("reference", "relation"):
         support_weights.update(reference_parent=episode_weight * float(weights.get("pair_parent", .25)),
                                reference_leaf=episode_weight * float(weights.get("pair_leaf", .25)))
+    loss_options = {}
+    if settings.get("membership", "prototype") == "relation" and "pair_negative_topk" in settings:
+        loss_options["reference_negative_topk"] = settings["pair_negative_topk"]
     components = hierarchical_losses(outputs, episodes, labels, meta["leaf_to_parent"],
-                                    weights=support_weights, margins=settings.get("margins", {}))
+                                    weights=support_weights, margins=settings.get("margins", {}),
+                                    **loss_options)
     leaf = F.cross_entropy(encoded["leaf_logits"], labels)
     mapping = torch.tensor(meta["leaf_to_parent"], dtype=torch.long, device=labels.device)
     parent = F.cross_entropy(encoded["parent_logits"], mapping[labels])
@@ -452,7 +495,7 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
         for key in ("parent_cross_species", "leaf_sibling"):
             terms[key] = representation[key]
             total = total + episode_weight * float(weights.get(key, .1)) * representation[key]
-    if settings.get("membership", "prototype") == "reference":
+    if settings.get("membership", "prototype") in ("reference", "relation"):
         for key in ("reference_parent", "reference_leaf"):
             terms[key] = components[key]
     rows = torch.arange(len(labels), device=labels.device)
@@ -461,14 +504,43 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
               for name, out in outputs.items()}
     if settings.get("decoupled", False):
         counts.update({key: int(value) for key, value in representation.items() if key.startswith("valid_")})
-    if settings.get("membership", "prototype") == "reference":
-        pair_counts = reference_supervision_counts(outputs["full"], labels, meta["leaf_to_parent"])
+    if settings.get("membership", "prototype") in ("reference", "relation"):
+        count_options = {}
+        if settings.get("membership", "prototype") == "relation" and "pair_negative_topk" in settings:
+            count_options["negative_topk"] = settings["pair_negative_topk"]
+        pair_counts = reference_supervision_counts(outputs["full"], labels, meta["leaf_to_parent"], **count_options)
         # Exposure means effective supervised pairs, not only available pairs:
         # warmup computes heads but pair losses carry zero weight.
         for key, value in pair_counts.items():
             component = "reference_parent" if key.startswith("parent_") else "reference_leaf"
             counts[key] = int(value) if support_weights[component] > 0 else 0
+    if settings.get("membership", "prototype") == "relation":
+        terms.update(_relation_diagnostics(encoded, outputs["full"], labels, mapping))
     return total, terms, counts
+
+
+@torch.no_grad()
+def _relation_diagnostics(encoded, output, labels, mapping):
+    """Cheap TRAIN-only measurements; never an objective or selection score."""
+    diagnostics = {}
+    for branch in ("parent", "fine"):
+        local = encoded.get(branch + "_local")
+        if local is not None and local.shape[1] > 1:
+            local = F.normalize(local.detach().float(), dim=-1)
+            similarity = local @ local.transpose(1, 2)
+            mask = ~torch.eye(local.shape[1], dtype=torch.bool, device=local.device)
+            diagnostics["diagnostic_" + branch + "_local_offdiag_cosine"] = similarity[:, mask].mean()
+    logits = output["leaf_membership_logits"].detach()
+    rows = torch.arange(len(labels), device=labels.device)
+    siblings = (mapping[None, :] == mapping[labels, None]) & output["active_leaves"]
+    siblings[rows, labels] = False
+    rival = logits.masked_fill(~siblings, -torch.inf).max(-1).values
+    positive = logits[rows, labels]
+    valid = torch.isfinite(positive) & torch.isfinite(rival)
+    margin = (positive - rival)[valid]
+    diagnostics["diagnostic_leaf_membership_sibling_margin"] = (
+        margin.mean() if margin.numel() else logits.new_zeros(()))
+    return diagnostics
 
 
 def load_trained(cfg, directory, device):

@@ -4,6 +4,7 @@ from torch import nn
 from torch.nn import functional as F
 from .support import validate_mapping
 from .reference import pair_features, aggregate_reference_logits
+from .relation import RelationMatcher
 
 
 def _masked_log_softmax(logits, active):
@@ -41,7 +42,8 @@ class CandidateMatcher(nn.Module):
 
 class HierarchicalEvidence(nn.Module):
     def __init__(self, dimension, leaf_to_parent, hidden_dim=32, temperature=0.1,
-                 local_enabled=True, decoupled=False, membership_mode="prototype", reference_topk=2):
+                 local_enabled=True, decoupled=False, membership_mode="prototype", reference_topk=2,
+                 relation_dim=32):
         super().__init__()
         mapping = validate_mapping(leaf_to_parent)
         if int(dimension) < 1 or int(hidden_dim) < 1 or float(temperature) <= 0:
@@ -55,9 +57,9 @@ class HierarchicalEvidence(nn.Module):
         self.local_bias = nn.Parameter(torch.zeros(()))
         self.local_enabled = bool(local_enabled)
         self.decoupled = bool(decoupled)
-        if membership_mode not in ("prototype", "reference"):
-            raise ValueError("membership_mode must be prototype or reference")
-        if membership_mode == "reference" and not self.decoupled:
+        if membership_mode not in ("prototype", "reference", "relation"):
+            raise ValueError("membership_mode must be prototype, reference, or relation")
+        if membership_mode in ("reference", "relation") and not self.decoupled:
             raise ValueError("Reference membership requires decoupled evidence")
         if int(reference_topk) < 1:
             raise ValueError("reference_topk must be positive")
@@ -65,7 +67,10 @@ class HierarchicalEvidence(nn.Module):
         # Do not construct new modules in legacy mode: its state keys, random
         # initialization sequence, and forward arithmetic remain unchanged.
         if self.decoupled:
-            if self.membership_mode == "reference":
+            if self.membership_mode == "relation":
+                self.parent_reference = RelationMatcher(self.dimension, relation_dim, int(hidden_dim), temperature)
+                self.fine_reference = RelationMatcher(self.dimension, relation_dim, int(hidden_dim), temperature)
+            elif self.membership_mode == "reference":
                 self.parent_reference = CandidateMatcher(int(hidden_dim), temperature)
                 self.fine_reference = CandidateMatcher(int(hidden_dim), temperature)
             else:
@@ -89,8 +94,16 @@ class HierarchicalEvidence(nn.Module):
         It must not be retained across query encodings, support refreshes, or
         optimizer steps. Permissions are applied separately in each forward.
         """
-        if self.membership_mode != "reference":
-            raise ValueError("Pair evidence is only available in reference mode")
+        if self.membership_mode not in ("reference", "relation"):
+            raise ValueError("Pair evidence is only available in reference or relation mode")
+        if self.membership_mode == "relation":
+            result = {"_encoded_id": id(encoded), "_bank_id": id(bank)}
+            for branch, bias in (("parent", self.root_bias), ("fine", self.local_bias)):
+                matcher = getattr(self, branch + "_reference")
+                result[branch] = matcher(encoded[branch], getattr(bank, branch),
+                                         encoded.get(branch + "_local") if self.local_enabled else None,
+                                         getattr(bank, branch + "_local") if self.local_enabled else None) + bias
+            return result
         features = pair_features(encoded, bank, local_enabled=self.local_enabled)
         return {"parent": self.parent_reference(features["parent"]) + self.root_bias,
                 "fine": self.fine_reference(features["fine"]) + self.local_bias,
@@ -115,7 +128,7 @@ class HierarchicalEvidence(nn.Module):
         parent_logits = self.parent_matcher(parent_features).masked_fill(~stats["parent_active"], -torch.inf)
         leaf_logits = self.fine_matcher(leaf_features).masked_fill(~stats["leaf_active"], -torch.inf)
         if self.decoupled:
-            if self.membership_mode == "reference":
+            if self.membership_mode in ("reference", "relation"):
                 pairs = (self.reference_pairs(encoded, bank) if reference_pair_logits is None
                          else reference_pair_logits)
                 if pairs.get("_encoded_id") != id(encoded) or pairs.get("_bank_id") != id(bank):

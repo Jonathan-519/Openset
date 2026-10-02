@@ -1,4 +1,6 @@
 """Known classification, intervention NLL, paired depth and control losses."""
+from numbers import Integral
+
 import torch
 from torch.nn import functional as F
 from .support import validate_mapping
@@ -58,9 +60,15 @@ def _reference_supervision_masks(full_output, labels, leaf_to_parent, valid_rows
             "leaf_other_parent_negative": allowed & ~same_parent}
 
 
-def reference_supervision_counts(full_output, labels, leaf_to_parent):
-    """Directed allowed pair counts for audit logs (not loss weights)."""
+def reference_supervision_counts(full_output, labels, leaf_to_parent, negative_topk=None):
+    """Directed supervised pair counts for audit logs (not loss weights).
+
+    The default counts all permitted pairs. With hard mining, positive counts
+    still cover all permitted positives while negative counts cover only the
+    selected pairs, using the same head-specific logits and masks as the loss.
+    """
     masks = _reference_supervision_masks(full_output, labels, leaf_to_parent)
+    _select_reference_negatives(masks, full_output, len(leaf_to_parent), negative_topk)
     return {"parent_cross_species_positive_pairs": int(masks["parent_cross_species"].sum()),
             "parent_singleton_fallback_positive_pairs": int(masks["parent_singleton_fallback"].sum()),
             "parent_other_parent_negative_pairs": int(masks["parent_negative"].sum()),
@@ -73,8 +81,8 @@ def _balanced_reference_bce(logits, positive, groups, reference_labels, num_leav
     """Equal present groups per query; within each group, equal reference leaves.
 
     Sibling negatives therefore retain a separate loss weight even when many
-    easy other-parent references exist. All available images still supervise
-    the verifier, including images outside the node's top-k witnesses.
+    easy other-parent references exist. The caller supplies all permitted
+    pairs by default, or the selected negative masks for hard mining.
     """
     active = torch.stack(groups).any(0)
     safe = logits.masked_fill(~active, 0.)
@@ -94,16 +102,52 @@ def _balanced_reference_bce(logits, positive, groups, reference_labels, num_leav
     return per_query.sum() / valid.sum().clamp_min(1) + safe.sum() * 0.
 
 
-def reference_pair_losses(full_output, labels, leaf_to_parent, valid_rows=None):
+def _hard_reference_negatives(logits, allowed, reference_labels, num_leaves, topk):
+    """Select up to ``topk`` permitted negatives independently in each leaf.
+
+    Selection uses raw verifier logits, so it targets the references that can
+    survive inference-time top-k pooling. Excluded references never enter the
+    ranking, including nonfinite placeholders for self hashes or removed
+    support. The discrete choice has no gradient; selected BCE values do.
+    """
+    if allowed.shape[1] == 0:
+        return allowed
+    in_leaf = reference_labels[None, :] == torch.arange(num_leaves, device=logits.device)[:, None]
+    candidates = allowed[:, None, :] & in_leaf[None, :, :]
+    ranked = logits.detach()[:, None, :].expand_as(candidates).masked_fill(~candidates, -torch.inf)
+    indices = ranked.topk(min(topk, allowed.shape[1]), dim=-1).indices
+    selected = torch.zeros_like(candidates).scatter(-1, indices, candidates.gather(-1, indices))
+    return selected.any(dim=1)
+
+
+def _select_reference_negatives(masks, full_output, num_leaves, negative_topk):
+    """Share the exact negative selection between loss and exposure audits."""
+    if negative_topk is None:
+        return
+    if (isinstance(negative_topk, bool) or not isinstance(negative_topk, Integral) or negative_topk <= 0):
+        raise ValueError("negative_topk must be a positive integer or None")
+    for group, head in (("parent_negative", "parent"),
+                        ("leaf_sibling_negative", "leaf"), ("leaf_other_parent_negative", "leaf")):
+        masks[group] = _hard_reference_negatives(full_output["reference_" + head + "_logits"],
+                                                masks[group], full_output["reference_labels"],
+                                                num_leaves, int(negative_topk))
+
+
+def reference_pair_losses(full_output, labels, leaf_to_parent, valid_rows=None, negative_topk=None):
     """Train absolute verifiers once against FULL known TRAIN references.
 
     Parent positives cross species where possible; genuine singleton parents
     fall back to another content hash of their only species. Same-species pairs
     are otherwise ignored by the parent task. Fine verification separately
     balances same-species positives, sibling negatives, and other-parent negatives.
+    Optional ``negative_topk`` keeps the hardest permitted negatives WITHIN each
+    reference leaf. Positive pairs and equal-leaf/group/query weighting remain
+    unchanged. ``None`` preserves the original all-pair
+    objective exactly; a value covering every leaf is also equivalent to it.
     """
     masks = _reference_supervision_masks(full_output, labels, leaf_to_parent, valid_rows)
     refs, leaves = full_output["reference_labels"], len(leaf_to_parent)
+    _select_reference_negatives(masks, full_output, leaves, negative_topk)
     parent = _balanced_reference_bce(full_output["reference_parent_logits"], masks["parent_positive"],
                                     (masks["parent_positive"], masks["parent_negative"]), refs, leaves)
     leaf = _balanced_reference_bce(full_output["reference_leaf_logits"], masks["leaf_positive"],
@@ -164,7 +208,8 @@ def representation_losses(encoded, labels, leaf_to_parent, query_hashes=None,
             "valid_parent_pairs": parent_pairs, "valid_leaf_pairs": leaf_pairs}
 
 
-def hierarchical_losses(outputs, episodes, labels, leaf_to_parent, weights=None, margins=None):
+def hierarchical_losses(outputs, episodes, labels, leaf_to_parent, weights=None, margins=None,
+                        reference_negative_topk=None):
     """Return differentiable loss components and valid full-support row count.
 
     Singleton images whose own hash is their only support cannot supply a full
@@ -259,7 +304,8 @@ def hierarchical_losses(outputs, episodes, labels, leaf_to_parent, weights=None,
     if "reference_parent_logits" in full:
         # Interventions retain node consistency/NLL, but do not relabel or
         # multiply the full-support image-pair task by the episode count.
-        losses.update(reference_pair_losses(full, labels, mapping, episodes["valid"]["full"].to(device)))
+        losses.update(reference_pair_losses(full, labels, mapping, episodes["valid"]["full"].to(device),
+                                            negative_topk=reference_negative_topk))
         defaults.update(reference_parent=1.0, reference_leaf=1.0)
     losses["total"] = sum(float(weights.get(key, defaults[key])) * value for key, value in losses.items())
     losses["valid_full_count"] = int(full_valid.sum())
