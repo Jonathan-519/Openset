@@ -33,6 +33,34 @@ def effective_config(path, variant="main", seed=1):
     settings = cfg["support"]
     if not isinstance(settings.get("decoupled", False), bool):
         raise ValueError("support.decoupled must be a YAML boolean")
+    membership = settings.get("membership", "prototype")
+    if membership not in ("prototype", "reference"):
+        raise ValueError("support.membership must be prototype or reference")
+    if membership == "reference" and not settings.get("decoupled", False):
+        raise ValueError("Reference membership requires support.decoupled=true")
+    if membership == "reference" or "reference_topk" in settings:
+        topk = settings.get("reference_topk", 2)
+        if isinstance(topk, bool) or not isinstance(topk, int) or not 1 <= topk <= int(settings.get("max_per_leaf", 8)):
+            raise ValueError("support.reference_topk must be an integer between 1 and max_per_leaf")
+    decoder = cfg.get("calibration", {}).get("decoder", "joint")
+    if decoder not in ("joint", "membership"):
+        raise ValueError("calibration.decoder must be joint or membership")
+    if decoder == "membership" and not settings.get("decoupled", False):
+        raise ValueError("Membership decoding requires support.decoupled=true")
+    if decoder == "membership":
+        calibration = cfg["calibration"]
+        if calibration.get("threshold_grid", "quantile") != "quantile":
+            raise ValueError("Membership calibration requires a quantile threshold grid")
+        grid_points = calibration.get("membership_grid_points", calibration.get("grid_points", 49))
+        if isinstance(grid_points, bool) or not isinstance(grid_points, int) or not 2 <= grid_points <= 401:
+            raise ValueError("membership_grid_points must be an integer in [2,401]")
+        for key in ("parent_threshold_grid", "leaf_threshold_grid"):
+            if key in calibration:
+                grid = calibration[key]
+                if not isinstance(grid, (list, tuple)) or not 1 <= len(grid) <= 403 or any(
+                        isinstance(value, bool) or not isinstance(value, (int, float)) or
+                        not math.isfinite(float(value)) for value in grid):
+                    raise ValueError(key + " must contain finite numeric thresholds")
     if cfg.get("calibration", {}).get("policy", "balanced") not in ("balanced", "known_first"):
         raise ValueError("Unknown calibration policy")
     weights = settings.setdefault("loss", {})
@@ -83,7 +111,10 @@ def signature(cfg):
         "train_taxosafe_new.py", "calibrate_taxosafe_new.py", "test_taxosafe_new.py",
         "tools/validate_taxosafe_support_holdout.py")]
     result["support_code"] = object_hash({str(p.relative_to(PROJECT_ROOT)): file_hash(p) for p in paths})
-    result["method"] = "support_decoupled_v2" if cfg["support"].get("decoupled", False) else "support_conditioned_v1"
+    if cfg["support"].get("membership", "prototype") == "reference":
+        result["method"] = "support_reference_v3"
+    else:
+        result["method"] = "support_decoupled_v2" if cfg["support"].get("decoupled", False) else "support_conditioned_v1"
     return result
 
 

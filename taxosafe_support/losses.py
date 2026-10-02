@@ -27,6 +27,89 @@ def _balanced_candidate_bce(logits, positive, active, valid_rows, zero):
     return values[groups > 0].mean() if bool((groups > 0).any()) else zero
 
 
+def _reference_supervision_masks(full_output, labels, leaf_to_parent, valid_rows=None):
+    """Known-only reference targets, after the model's hash/support permissions."""
+    allowed = full_output["reference_allowed"]
+    device = allowed.device
+    mapping = validate_mapping(leaf_to_parent).to(device)
+    labels = torch.as_tensor(labels, dtype=torch.long, device=device)
+    references = full_output["reference_labels"].to(device)
+    if labels.shape != (len(allowed),) or references.shape != (allowed.shape[1],):
+        raise ValueError("Reference supervision requires one label per query/reference")
+    if valid_rows is not None:
+        allowed = allowed & torch.as_tensor(valid_rows, dtype=torch.bool, device=device)[:, None]
+    same_leaf = labels[:, None] == references[None, :]
+    same_parent = mapping[labels, None] == mapping[references][None, :]
+    # Singleton status belongs to the BANK taxonomy, never to a minibatch or
+    # query mask. Losing a sibling to self-hash exclusion is not a singleton.
+    present = full_output["reference_leaf_present"].to(device)
+    assignment = F.one_hot(mapping, full_output["active_parents"].shape[1]).to(torch.long)
+    species_per_parent = present.to(torch.long) @ assignment
+    singleton = species_per_parent[mapping[labels]] == 1
+    cross_species = allowed & same_parent & ~same_leaf
+    singleton_fallback = allowed & same_leaf & singleton[:, None]
+    return {"parent_cross_species": cross_species, "parent_singleton_fallback": singleton_fallback,
+            "parent_positive": cross_species | singleton_fallback,
+            "parent_negative": allowed & ~same_parent,
+            "leaf_positive": allowed & same_leaf,
+            "leaf_sibling_negative": allowed & same_parent & ~same_leaf,
+            "leaf_other_parent_negative": allowed & ~same_parent}
+
+
+def reference_supervision_counts(full_output, labels, leaf_to_parent):
+    """Directed allowed pair counts for audit logs (not loss weights)."""
+    masks = _reference_supervision_masks(full_output, labels, leaf_to_parent)
+    return {"parent_cross_species_positive_pairs": int(masks["parent_cross_species"].sum()),
+            "parent_singleton_fallback_positive_pairs": int(masks["parent_singleton_fallback"].sum()),
+            "parent_other_parent_negative_pairs": int(masks["parent_negative"].sum()),
+            "leaf_positive_pairs": int(masks["leaf_positive"].sum()),
+            "leaf_sibling_negative_pairs": int(masks["leaf_sibling_negative"].sum()),
+            "leaf_other_parent_negative_pairs": int(masks["leaf_other_parent_negative"].sum())}
+
+
+def _balanced_reference_bce(logits, positive, groups, reference_labels, num_leaves):
+    """Equal present groups per query; within each group, equal reference leaves.
+
+    Sibling negatives therefore retain a separate loss weight even when many
+    easy other-parent references exist. All available images still supervise
+    the verifier, including images outside the node's top-k witnesses.
+    """
+    active = torch.stack(groups).any(0)
+    safe = logits.masked_fill(~active, 0.)
+    element = F.binary_cross_entropy_with_logits(safe, positive.to(safe.dtype), reduction="none")
+    assignment = F.one_hot(reference_labels, num_leaves).to(safe.dtype)
+    numerator, denominator = torch.zeros_like(safe[:, 0]), torch.zeros_like(safe[:, 0])
+    for group in groups:
+        counts = group.to(safe.dtype) @ assignment
+        by_leaf = (element * group).matmul(assignment) / counts.clamp_min(1)
+        leaf_count = (counts > 0).sum(-1)
+        numerator = numerator + by_leaf.sum(-1) / leaf_count.clamp_min(1)
+        denominator = denominator + (leaf_count > 0).to(safe.dtype)
+    per_query = numerator / denominator.clamp_min(1)
+    valid = denominator > 0
+    # Masked sum keeps every pair-head parameter on a finite zero graph when
+    # all support is excluded, without a data-dependent Python branch.
+    return per_query.sum() / valid.sum().clamp_min(1) + safe.sum() * 0.
+
+
+def reference_pair_losses(full_output, labels, leaf_to_parent, valid_rows=None):
+    """Train absolute verifiers once against FULL known TRAIN references.
+
+    Parent positives cross species where possible; genuine singleton parents
+    fall back to another content hash of their only species. Same-species pairs
+    are otherwise ignored by the parent task. Fine verification separately
+    balances same-species positives, sibling negatives, and other-parent negatives.
+    """
+    masks = _reference_supervision_masks(full_output, labels, leaf_to_parent, valid_rows)
+    refs, leaves = full_output["reference_labels"], len(leaf_to_parent)
+    parent = _balanced_reference_bce(full_output["reference_parent_logits"], masks["parent_positive"],
+                                    (masks["parent_positive"], masks["parent_negative"]), refs, leaves)
+    leaf = _balanced_reference_bce(full_output["reference_leaf_logits"], masks["leaf_positive"],
+                                  (masks["leaf_positive"], masks["leaf_sibling_negative"],
+                                   masks["leaf_other_parent_negative"]), refs, leaves)
+    return {"reference_parent": parent, "reference_leaf": leaf}
+
+
 def representation_losses(encoded, labels, leaf_to_parent, query_hashes=None,
                           margin=0.2, temperature=0.1):
     """Known-only batch contrastive supervision on the existing image graph.
@@ -171,6 +254,11 @@ def hierarchical_losses(outputs, episodes, labels, leaf_to_parent, weights=None,
         losses["membership_parent"] = torch.stack(parent_bce).mean() if parent_bce else zero
         losses["membership_leaf"] = torch.stack(leaf_bce).mean() if leaf_bce else zero
         defaults.update(membership_parent=1.0, membership_leaf=1.0)
+    if "reference_parent_logits" in full:
+        # Interventions retain node consistency/NLL, but do not relabel or
+        # multiply the full-support image-pair task by the episode count.
+        losses.update(reference_pair_losses(full, labels, mapping, episodes["valid"]["full"].to(device)))
+        defaults.update(reference_parent=1.0, reference_leaf=1.0)
     losses["total"] = sum(float(weights.get(key, defaults[key])) * value for key, value in losses.items())
     losses["valid_full_count"] = int(full_valid.sum())
     return losses

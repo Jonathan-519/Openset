@@ -209,6 +209,8 @@ def score_fold(encoder, evidence, bank, cfg, meta, groups, fold, device):
     encoder.eval()
     evidence.eval()
     active = torch.tensor(fold["active_leaf_mask"], dtype=torch.bool, device=device)
+    mapping = torch.tensor(meta["leaf_to_parent"], dtype=torch.long, device=device)
+    reference_membership = cfg["support"].get("membership", "prototype") == "reference"
     offset = 1 + len(meta["parent_names"])
     text_features = encoder.text_features()
     records = []
@@ -236,6 +238,20 @@ def score_fold(encoder, evidence, bank, cfg, meta, groups, fold, device):
                 if "parent_membership_logits" in output:
                     candidate_leaf = record["closed_pred_leaf"]
                     candidate_parent = meta["leaf_to_parent"][candidate_leaf]
+                    if reference_membership:
+                        # Match production identity selection, without fitting
+                        # or applying development thresholds to a strict fold.
+                        candidate_parent = int(output["parent_logits"][i].argmax())
+                        candidate_leaf = int(output["leaf_logits"][i].masked_fill(
+                            mapping != candidate_parent, -torch.inf).argmax())
+                        record.update(
+                            support_evidence={key: _json_scores(output[key][i]) for key in (
+                                "parent_logits", "leaf_logits", "parent_membership_logits", "leaf_membership_logits")},
+                            support_candidate_parent=candidate_parent, support_candidate_leaf=candidate_leaf,
+                            support_candidate_parent_membership_logit=float(output["parent_membership_logits"][i, candidate_parent]),
+                            support_candidate_leaf_membership_logit=float(output["leaf_membership_logits"][i, candidate_leaf]),
+                            support_candidate_rule="argmax_parent_ranking_then_argmax_leaf_ranking_within_that_parent",
+                            membership_thresholds_applied=False)
                     record.update(candidate_leaf=candidate_leaf, candidate_parent=candidate_parent,
                                   parent_membership_logits=_json_scores(output["parent_membership_logits"][i]),
                                   leaf_membership_logits=_json_scores(output["leaf_membership_logits"][i]),
@@ -260,6 +276,12 @@ def score_fold(encoder, evidence, bank, cfg, meta, groups, fold, device):
               "heldout_prediction_counts": {kind: sum(r["prediction_type"] == kind for r in held)
                                              for kind in ("root", "parent", "leaf")},
               "inactive_log_probability_encoding": "null denotes impossible inactive taxonomy node"}
+    if reference_membership:
+        report["support_candidate_diagnostics"] = {
+            "rule": "argmax_parent_ranking_then_argmax_leaf_ranking_within_that_parent",
+            "membership_thresholds_applied": False,
+            "interpretation": "Raw identity-aligned evidence only; reported decisions remain uncalibrated joint argmax",
+            "inactive_raw_evidence_encoding": "null denotes an inactive taxonomy node"}
     return records, report
 
 

@@ -20,7 +20,7 @@ from .calibration import apply_router, calibrate, evaluate_gates, evaluate_recor
 from .encoders import SupportEncoder
 from .evidence import HierarchicalEvidence
 from .episodes import build_episodes
-from .losses import hierarchical_losses, representation_losses
+from .losses import hierarchical_losses, reference_supervision_counts, representation_losses
 from .protocol import (PROJECT_ROOT, VARIANTS, claim_stage, effective_config, file_hash,
                        load_stage_rows, read_json, require_signature, resolve, run_lock,
                        signature, verify_artifact, write_json, write_records)
@@ -199,7 +199,9 @@ def _make_evidence(encoder, cfg, meta, device):
                                 hidden_dim=int(settings.get("hidden_dim", 32)),
                                 temperature=float(settings.get("temperature", .1)),
                                 local_enabled=bool(settings.get("local_enabled", True)),
-                                decoupled=bool(settings.get("decoupled", False))).to(device)
+                                decoupled=bool(settings.get("decoupled", False)),
+                                membership_mode=settings.get("membership", "prototype"),
+                                reference_topk=settings.get("reference_topk", 2)).to(device)
 
 
 def _optimizer(encoder, evidence, settings):
@@ -274,6 +276,10 @@ def train_rows(cfg, directory, device, groups, meta, audit, sig, debug=False,
                          "query_backbone_passes_per_step": 1,
                          "references_per_leaf_max": int(cfg["support"].get("max_per_leaf", 8)),
                          "speed_parity_with_v11": "unmeasured; compare same hardware and manifest"}
+    if cfg["support"].get("membership", "prototype") == "reference":
+        parameters_report.update(membership="reference", reference_topk=int(cfg["support"].get("reference_topk", 2)),
+                                 pair_supervision="full_support_only; query content excluded",
+                                 parent_positive_pairs="same parent, different leaf; singleton fallback logged")
     write_json(output / "model_cost.json", parameters_report)
     best_key, best_epoch, best_validation, bad_epochs = None, None, None, 0
     episode_epochs, exposure = 0, {}
@@ -396,8 +402,13 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
         names.extend(["drop_leaf", "control_leaf"])
         if settings.get("parent_holdout_enabled", True):
             names.extend(["drop_parent", "control_parent"])
+    kwargs = {}
+    if settings.get("membership", "prototype") == "reference":
+        # Explicit batch-local reuse keeps the pair/local graph attached while
+        # each intervention independently masks and pools the same raw pairs.
+        kwargs["reference_pair_logits"] = evidence.reference_pairs(encoded, bank)
     outputs = {name: evidence(encoded, bank, mask=episodes["masks"][name],
-                              query_hashes=query_hashes) for name in names}
+                              query_hashes=query_hashes, **kwargs) for name in names}
     support_weights = {"leaf": float(weights.get("support_leaf", .25)),
                        "parent": float(weights.get("support_parent", .1)),
                        "episode": episode_weight * float(weights.get("episode", 1.)),
@@ -406,6 +417,9 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
     if settings.get("decoupled", False):
         for key in ("membership_parent", "membership_leaf"):
             support_weights[key] = episode_weight * float(weights.get(key, 1.))
+    if settings.get("membership", "prototype") == "reference":
+        support_weights.update(reference_parent=episode_weight * float(weights.get("pair_parent", .25)),
+                               reference_leaf=episode_weight * float(weights.get("pair_leaf", .25)))
     components = hierarchical_losses(outputs, episodes, labels, meta["leaf_to_parent"],
                                     weights=support_weights, margins=settings.get("margins", {}))
     leaf = F.cross_entropy(encoded["leaf_logits"], labels)
@@ -438,12 +452,22 @@ def training_loss(encoded, labels, indices, query_hashes, bank, evidence, cfg, m
         for key in ("parent_cross_species", "leaf_sibling"):
             terms[key] = representation[key]
             total = total + episode_weight * float(weights.get(key, .1)) * representation[key]
+    if settings.get("membership", "prototype") == "reference":
+        for key in ("reference_parent", "reference_leaf"):
+            terms[key] = components[key]
     rows = torch.arange(len(labels), device=labels.device)
     counts = {name: int((episodes["valid"][name] & torch.isfinite(
                        out["log_probs"][rows, episodes["targets"][name]])).sum())
               for name, out in outputs.items()}
     if settings.get("decoupled", False):
         counts.update({key: int(value) for key, value in representation.items() if key.startswith("valid_")})
+    if settings.get("membership", "prototype") == "reference":
+        pair_counts = reference_supervision_counts(outputs["full"], labels, meta["leaf_to_parent"])
+        # Exposure means effective supervised pairs, not only available pairs:
+        # warmup computes heads but pair losses carry zero weight.
+        for key, value in pair_counts.items():
+            component = "reference_parent" if key.startswith("parent_") else "reference_leaf"
+            counts[key] = int(value) if support_weights[component] > 0 else 0
     return total, terms, counts
 
 

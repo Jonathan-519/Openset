@@ -3,6 +3,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from .support import validate_mapping
+from .reference import pair_features, aggregate_reference_logits
 
 
 def _masked_log_softmax(logits, active):
@@ -40,7 +41,7 @@ class CandidateMatcher(nn.Module):
 
 class HierarchicalEvidence(nn.Module):
     def __init__(self, dimension, leaf_to_parent, hidden_dim=32, temperature=0.1,
-                 local_enabled=True, decoupled=False):
+                 local_enabled=True, decoupled=False, membership_mode="prototype", reference_topk=2):
         super().__init__()
         mapping = validate_mapping(leaf_to_parent)
         if int(dimension) < 1 or int(hidden_dim) < 1 or float(temperature) <= 0:
@@ -54,11 +55,22 @@ class HierarchicalEvidence(nn.Module):
         self.local_bias = nn.Parameter(torch.zeros(()))
         self.local_enabled = bool(local_enabled)
         self.decoupled = bool(decoupled)
+        if membership_mode not in ("prototype", "reference"):
+            raise ValueError("membership_mode must be prototype or reference")
+        if membership_mode == "reference" and not self.decoupled:
+            raise ValueError("Reference membership requires decoupled evidence")
+        if int(reference_topk) < 1:
+            raise ValueError("reference_topk must be positive")
+        self.membership_mode, self.reference_topk = membership_mode, int(reference_topk)
         # Do not construct new modules in legacy mode: its state keys, random
         # initialization sequence, and forward arithmetic remain unchanged.
         if self.decoupled:
-            self.parent_membership = CandidateMatcher(int(hidden_dim), temperature)
-            self.fine_membership = CandidateMatcher(int(hidden_dim), temperature)
+            if self.membership_mode == "reference":
+                self.parent_reference = CandidateMatcher(int(hidden_dim), temperature)
+                self.fine_reference = CandidateMatcher(int(hidden_dim), temperature)
+            else:
+                self.parent_membership = CandidateMatcher(int(hidden_dim), temperature)
+                self.fine_membership = CandidateMatcher(int(hidden_dim), temperature)
 
     def _local(self, query, references, weights, fallback):
         if not self.local_enabled or query is None or references is None:
@@ -70,7 +82,21 @@ class HierarchicalEvidence(nn.Module):
         image_scores = pair.max(-1).values.mean(-1)
         return torch.einsum("bn,bnv->bv", image_scores, weights)
 
-    def forward(self, encoded, bank, mask=None, query_hashes=None):
+    def reference_pairs(self, encoded, bank):
+        """Compute one query batch's pair graph for explicit episode reuse.
+
+        This is an ephemeral caller-owned value, never a persistent model cache.
+        It must not be retained across query encodings, support refreshes, or
+        optimizer steps. Permissions are applied separately in each forward.
+        """
+        if self.membership_mode != "reference":
+            raise ValueError("Pair evidence is only available in reference mode")
+        features = pair_features(encoded, bank, local_enabled=self.local_enabled)
+        return {"parent": self.parent_reference(features["parent"]) + self.root_bias,
+                "fine": self.fine_reference(features["fine"]) + self.local_bias,
+                "_encoded_id": id(encoded), "_bank_id": id(bank)}
+
+    def forward(self, encoded, bank, mask=None, query_hashes=None, reference_pair_logits=None):
         parent, fine = encoded["parent"].float(), encoded["fine"].float()
         if parent.ndim != 2 or parent.shape != fine.shape or parent.shape[1] != self.dimension:
             raise ValueError("Encoded parent/fine features must match [B,D]")
@@ -89,6 +115,27 @@ class HierarchicalEvidence(nn.Module):
         parent_logits = self.parent_matcher(parent_features).masked_fill(~stats["parent_active"], -torch.inf)
         leaf_logits = self.fine_matcher(leaf_features).masked_fill(~stats["leaf_active"], -torch.inf)
         if self.decoupled:
+            if self.membership_mode == "reference":
+                pairs = (self.reference_pairs(encoded, bank) if reference_pair_logits is None
+                         else reference_pair_logits)
+                if pairs.get("_encoded_id") != id(encoded) or pairs.get("_bank_id") != id(bank):
+                    raise ValueError("Pair evidence must come from the same query encoding and support bank")
+                allowed = stats["allowed"]
+                if pairs["parent"].shape != allowed.shape or pairs["fine"].shape != allowed.shape:
+                    raise ValueError("Cached pair evidence has an invalid shape")
+                # Biases are included once, before pooling. They train through
+                # both direct pair BCE and the unchanged joint output objective.
+                parent_pairs = pairs["parent"].masked_fill(~allowed, -torch.inf)
+                leaf_pairs = pairs["fine"].masked_fill(~allowed, -torch.inf)
+                pm, lm = aggregate_reference_logits(parent_pairs, leaf_pairs, allowed, bank.labels,
+                                                     self.leaf_to_parent, self.reference_topk,
+                                                     num_parents=self.num_parents)
+                output = self._decoupled_output(parent_features, leaf_features, parent_logits,
+                                                leaf_logits, stats, membership_logits=(pm, lm))
+                output.update(reference_parent_logits=parent_pairs, reference_leaf_logits=leaf_pairs,
+                              reference_allowed=allowed, reference_labels=bank.labels,
+                              reference_leaf_present=F.one_hot(bank.labels, self.num_leaves).bool().any(0))
+                return output
             return self._decoupled_output(parent_features, leaf_features, parent_logits, leaf_logits, stats)
         root_logit = parent_logits.max(-1).values + self.root_bias
         local_logits = torch.stack([leaf_logits[:, self.leaf_to_parent == p].max(-1).values
@@ -113,7 +160,8 @@ class HierarchicalEvidence(nn.Module):
                 "active_parents": stats["parent_active"], "parent_features": parent_features,
                 "leaf_features": leaf_features}
 
-    def _decoupled_output(self, parent_features, leaf_features, parent_logits, leaf_logits, stats):
+    def _decoupled_output(self, parent_features, leaf_features, parent_logits, leaf_logits, stats,
+                          membership_logits=None):
         """Route mass using the membership of the SAME identity candidate.
 
         q and t only rank identities. Independent sigmoid gates r_p and a_c
@@ -124,8 +172,11 @@ class HierarchicalEvidence(nn.Module):
         pa, la = stats["parent_active"], stats["leaf_active"]
         # Existing scalar parameters remain useful: they are shared membership
         # intercepts, supervised by BCE as well as the joint episode likelihood.
-        pm = (self.parent_membership(parent_features) + self.root_bias).masked_fill(~pa, -torch.inf)
-        lm = (self.fine_membership(leaf_features) + self.local_bias).masked_fill(~la, -torch.inf)
+        if membership_logits is None:
+            pm = (self.parent_membership(parent_features) + self.root_bias).masked_fill(~pa, -torch.inf)
+            lm = (self.fine_membership(leaf_features) + self.local_bias).masked_fill(~la, -torch.inf)
+        else:
+            pm, lm = membership_logits
         log_q = _masked_log_softmax(parent_logits, pa)
         log_t = torch.full_like(leaf_logits, -torch.inf)
         local_accept, local_reject = [], []

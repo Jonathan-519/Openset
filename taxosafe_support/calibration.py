@@ -62,6 +62,13 @@ def unique_records(records):
             if "log_probs" in old or "log_probs" in row:
                 if "log_probs" not in old or "log_probs" not in row or not np.array_equal(old["log_probs"], row["log_probs"]):
                     raise ValueError("Same content has inconsistent model evidence: " + key)
+            if "support_evidence" in old or "support_evidence" in row:
+                if "support_evidence" not in old or "support_evidence" not in row:
+                    raise ValueError("Same content has missing raw support evidence: " + key)
+                left, right = old["support_evidence"], row["support_evidence"]
+                if (not isinstance(left, dict) or not isinstance(right, dict) or left.keys() != right.keys()
+                        or any(not np.array_equal(left[k], right[k]) for k in left)):
+                    raise ValueError("Same content has inconsistent raw support evidence: " + key)
             continue
         seen[key] = row
         unique.append(row)
@@ -121,6 +128,11 @@ def decode_records(records, state, meta):
     depth the lowest node index. Candidate fields remain populated at root for
     compatibility with metrics_open; parent/leaf identify the actual output.
     """
+    if state.get("decoder") == "membership" or state.get("schema_version") == "support_membership_v1":
+        from .membership_calibration import decode_records as decode_membership
+        return decode_membership(records, state, meta)
+    if state.get("decoder", "joint") != "joint":
+        raise ValueError("Unknown calibration decoder")
     records = list(records)
     values, p, c, mapping = _scores(records, meta)
     pb, lb = _biases(state, meta)
@@ -433,6 +445,11 @@ def source_loo(known, near, extra, meta, settings=None):
     explicit grids also avoid indirectly selecting candidates from the holdout.
     """
     settings = dict(settings or {})
+    if settings.get("decoder") == "membership":
+        from .membership_calibration import source_loo as membership_loo
+        return membership_loo(known, near, extra, meta, settings)
+    if settings.get("decoder", "joint") != "joint":
+        raise ValueError("Unknown calibration decoder")
     policy = _selection_policy(settings)
     rows, _ = _fit_inputs(known, near, extra, meta)
     pg, lg = _grid(settings, "parent_bias_grid"), _grid(settings, "leaf_bias_grid")
@@ -466,6 +483,11 @@ def calibrate(known, near, extra, meta, settings=None):
     grid when joint feasibility fails. The default balanced policy is unchanged.
     """
     settings = dict(settings or {})
+    if settings.get("decoder") == "membership":
+        from .membership_calibration import calibrate as calibrate_membership
+        return calibrate_membership(known, near, extra, meta, settings)
+    if settings.get("decoder", "joint") != "joint":
+        raise ValueError("Unknown calibration decoder")
     policy = _selection_policy(settings)
     known, near, extra = list(known), list(near), list(extra)
     rows, input_count = _fit_inputs(known, near, extra, meta)
