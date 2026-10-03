@@ -1,4 +1,4 @@
-"""Package one TaxoSafe-new run's text diagnostics, without weights or images."""
+"""Package a support or frozen-refinement run's text, without weights/images."""
 
 import argparse
 from datetime import datetime, timezone
@@ -25,10 +25,19 @@ def pack(run, output):
     if output.exists() or output.is_symlink():
         raise ValueError("Review archive already exists: " + str(output))
     config = run / "training/config.json"
+    schema = "taxosafe_new_review_v1"
+    if not config.exists():
+        config = run / "refinement/config.json"
+        schema = "taxosafe_refine_review_v1"
     if not config.is_file() or config.is_symlink() or config.parent.is_symlink():
-        raise ValueError("Expected an existing run with training/config.json: " + str(run))
+        raise ValueError("Expected training/config.json or refinement/config.json: " + str(run))
     configuration = json.loads(config.read_text(encoding="utf-8"))
-    if "support" not in configuration or "dcbs" in configuration:
+    if schema == "taxosafe_refine_review_v1":
+        if (configuration.get("features") not in ("fine", "raw_spatial")
+                or not isinstance(configuration.get("reconstruction"), dict)
+                or "support" in configuration or "dcbs" in configuration):
+            raise ValueError("Expected a frozen-reference refinement configuration")
+    elif "support" not in configuration or "dcbs" in configuration:
         raise ValueError("Expected a TaxoSafe-new support configuration, not a historical run")
     files = []
     for path in sorted(run.rglob("*")):
@@ -45,7 +54,7 @@ def pack(run, output):
 
     output.parent.mkdir(parents=True, exist_ok=True)
     metadata = {
-        "schema": "taxosafe_new_review_v1",
+        "schema": schema,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "run_name": run.name,
         "includes_images": False,

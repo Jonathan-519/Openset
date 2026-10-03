@@ -1,5 +1,7 @@
 # TaxoSafe new：支持集条件化的层级证据学习
 
+> 2026-10-03 更新：relation trial 1 未改善总体表现。当前建议基于较优 reference v3 做独立精修，见 [冻结 reference 的细粒度拒识运行说明](docs/TAXOSAFE_REFERENCE_REFINE.md)。该入口复用已有权重，不需要重训 MaPLe，并明确报告父级路由造成的性能上限。
+
 > 本页保留早期 `TaxoSafe_support_new.yml` 的使用说明。本轮新增的类别判别／成员性分离方案、TRAIN 内部严格留类验证及显式新配置运行命令，见 [TaxoSafe decoupled 运行说明](docs/TAXOSAFE_DECOUPLED.md)。
 
 本分支基于 `taxosafe-v11-dcbs`，新增独立的 `taxosafe_support/` 方法、配置及训练／校准／测试入口。目标仍是 known 到正确叶、near 到正确父、extra 到根。已有图片、数据清单、旧方法入口和历史实验目录继续保留。

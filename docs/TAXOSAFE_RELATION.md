@@ -1,5 +1,7 @@
 # TaxoSafe relation：论文依据、实现与运行说明
 
+> 后续实验更新（2026-10-03）：relation trial 1 四项 TEST 指标为 90.22% / 56.37% / 54.78% / 80.24%，均低于 reference v3。本页保留该实验的复现说明；新的独立精修路线见 [冻结 reference 运行说明](TAXOSAFE_REFERENCE_REFINE.md)，不继续把 relation 当作已经验证更优的基线。
+
 本轮依据 `trial_1_cuda_fix` 的 TRAIN/DEV 诊断实现独立 `support_relation_v4` 配置。原结果分析及全部逐物种表见 [实验复核](TAXOSAFE_RELATION_RESULT_REVIEW.md)，机器可读审计见 [审计JSON](REFERENCE_TRIAL1_AUDIT_20261003.json)。reference v3 的94.00% / 60.78% / 80.88% / 83.10%不是新relation模型的结果。
 
 ## 1. 为什么改变匹配证据
