@@ -1,0 +1,643 @@
+{
+  "date": "2026-10-03",
+  "base_branch": "new",
+  "base_commit": "40f1eccf5b86308540f386dc69f9438622c78762",
+  "qualified_new_rule_found": false,
+  "research_targets_passed": false,
+  "provenance": {
+    "kind": "exploratory_dev_text_replay_not_production_receipt",
+    "original_method": "frozen_reference_parentrisk_v1",
+    "new_method": "frozen_reference_frontier_v1",
+    "source_development_scores_sha256": "f4f16f1ad1a5db6303da713e8bcc214a6c229f74d40c54221b570b73c0fb2c78",
+    "source_calibration_router_sha256": "cc36d94de771894ef2b39b97a9c18b254d4c10e43230fe5df19f1ac0ddf8a65f",
+    "source_fit_receipt_sha256": "5fc0f78ca9e65b507df6d73cc096bcbc3e1ddd081f306c53d8a1af98cf3463e5",
+    "source_signature": {
+      "method": "frozen_reference_parentrisk_v1",
+      "config": "c0189ddda06320de7ce167eb4005c1d3287bc0a98094d23dde6ddfca7844a5ea",
+      "reference": "4432f28a803953a7f504707054cb2fe20ba29a7eab01e6e5c1b174c1f44e9124",
+      "code": "866ea7a6c361aac216217c8baad025456a1161066937dbdb44b5cb9193299c15"
+    },
+    "new_code_sha256": "a926c60e90d5db3629a960b99ac8c3806657077dd9db6184b9f0c8fdead485bc",
+    "replay_tool_sha256": "055ea58bc936c15e2c4102897eee446200a5e3372578aacb9c4e6ec18d27171a",
+    "dev_unique_images": 376,
+    "test_files_opened": false,
+    "image_pipeline_executed": false,
+    "checkpoint_and_cache_binary_verified": false,
+    "validation_scope": "exploratory_postprocessor_on_previously_used_development",
+    "development_reused_for_method_design": true,
+    "independent_model_level_validation": false,
+    "confirmatory_validation": false
+  },
+  "deployment": {
+    "selection_status": "no_feasible_candidate",
+    "baseline_fallback": true,
+    "reject_rules": [],
+    "target_status": "target_failed",
+    "validation_report": {
+      "counts": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 198,
+        "intra_correct": 30,
+        "extra_correct": 71,
+        "leaf_outputs": 229
+      },
+      "metrics": {
+        "known_end_to_end_leaf_accuracy": 0.9041095890410958,
+        "intra_correct_fallback_rate": 0.43478260869565216,
+        "extra_global_unknown_recall": 0.8068181818181818,
+        "open_world_accepted_leaf_precision": 0.8646288209606987
+      },
+      "checks": {
+        "known_end_to_end_leaf_accuracy": true,
+        "intra_correct_fallback_rate": false,
+        "extra_global_unknown_recall": false,
+        "open_world_accepted_leaf_precision": false
+      },
+      "targets_passed": false
+    },
+    "baseline_validation_report": {
+      "counts": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 198,
+        "intra_correct": 30,
+        "extra_correct": 71,
+        "leaf_outputs": 229
+      },
+      "metrics": {
+        "known_end_to_end_leaf_accuracy": 0.9041095890410958,
+        "intra_correct_fallback_rate": 0.43478260869565216,
+        "extra_global_unknown_recall": 0.8068181818181818,
+        "open_world_accepted_leaf_precision": 0.8646288209606987
+      },
+      "checks": {
+        "known_end_to_end_leaf_accuracy": true,
+        "intra_correct_fallback_rate": false,
+        "extra_global_unknown_recall": false,
+        "open_world_accepted_leaf_precision": false
+      },
+      "targets_passed": false
+    },
+    "search_limitation": "Observed x breakpoints with maximal finite y below protected fit points; duplicate masks removed. No claim of exhaustive continuous or joint two-action optimization, optimal minimum-change tie solution, statistical validity after adaptive DEV reuse, or performance guarantees on unseen data."
+  },
+  "inner_candidates": [
+    {
+      "action_plan": [
+        "leaf_reject"
+      ],
+      "admissible": false,
+      "status": "heldout_degraded",
+      "rejection_reasons": [
+        "known_added_harm",
+        "benefiting_sources_below_minimum",
+        "component:leaf_reject:known_added_harm",
+        "component:leaf_reject:benefiting_sources_below_minimum"
+      ],
+      "selection_audit": {
+        "passed": false,
+        "improved": true,
+        "gains": [
+          {
+            "status": "extra",
+            "source": "alimalarva",
+            "correct_gain": 0,
+            "false_leaf_reduction": 2
+          }
+        ],
+        "counts": {
+          "known": 219,
+          "intra": 69,
+          "extra": 88,
+          "known_correct": 195,
+          "intra_correct": 27,
+          "extra_correct": 65,
+          "leaf_outputs": 228
+        },
+        "known_added_harm": 1,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": true,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": false,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "known_added_harm",
+          "benefiting_sources_below_minimum"
+        ]
+      },
+      "component_audits": {
+        "leaf_reject": {
+          "passed": false,
+          "improved": true,
+          "gains": [
+            {
+              "status": "extra",
+              "source": "alimalarva",
+              "correct_gain": 0,
+              "false_leaf_reduction": 2
+            }
+          ],
+          "counts": {
+            "known": 219,
+            "intra": 69,
+            "extra": 88,
+            "known_correct": 195,
+            "intra_correct": 27,
+            "extra_correct": 65,
+            "leaf_outputs": 228
+          },
+          "known_added_harm": 1,
+          "near_added_harm": 0,
+          "near_parent_path_loss": 0,
+          "admissible": false,
+          "failure_flags": {
+            "known_added_harm": true,
+            "near_added_harm": false,
+            "near_parent_path_loss": false,
+            "source_correct_decline": false,
+            "leaf_precision_decline": false,
+            "no_improvement": false,
+            "benefiting_sources_below_minimum": true
+          },
+          "rejection_reasons": [
+            "known_added_harm",
+            "benefiting_sources_below_minimum"
+          ]
+        }
+      }
+    },
+    {
+      "action_plan": [
+        "root_reject"
+      ],
+      "admissible": false,
+      "status": "no_feasible_candidate",
+      "rejection_reasons": [
+        "no_improvement",
+        "benefiting_sources_below_minimum",
+        "component:root_reject:no_improvement",
+        "component:root_reject:benefiting_sources_below_minimum"
+      ],
+      "selection_audit": {
+        "passed": true,
+        "improved": false,
+        "gains": [],
+        "counts": {
+          "known": 219,
+          "intra": 69,
+          "extra": 88,
+          "known_correct": 196,
+          "intra_correct": 27,
+          "extra_correct": 65,
+          "leaf_outputs": 231
+        },
+        "known_added_harm": 0,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": false,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": true,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "no_improvement",
+          "benefiting_sources_below_minimum"
+        ]
+      },
+      "component_audits": {
+        "root_reject": {
+          "passed": true,
+          "improved": false,
+          "gains": [],
+          "counts": {
+            "known": 219,
+            "intra": 69,
+            "extra": 88,
+            "known_correct": 196,
+            "intra_correct": 27,
+            "extra_correct": 65,
+            "leaf_outputs": 231
+          },
+          "known_added_harm": 0,
+          "near_added_harm": 0,
+          "near_parent_path_loss": 0,
+          "admissible": false,
+          "failure_flags": {
+            "known_added_harm": false,
+            "near_added_harm": false,
+            "near_parent_path_loss": false,
+            "source_correct_decline": false,
+            "leaf_precision_decline": false,
+            "no_improvement": true,
+            "benefiting_sources_below_minimum": true
+          },
+          "rejection_reasons": [
+            "no_improvement",
+            "benefiting_sources_below_minimum"
+          ]
+        }
+      }
+    },
+    {
+      "action_plan": [
+        "leaf_reject",
+        "root_reject"
+      ],
+      "admissible": false,
+      "status": "heldout_degraded",
+      "rejection_reasons": [
+        "known_added_harm",
+        "benefiting_sources_below_minimum",
+        "component:leaf_reject:known_added_harm",
+        "component:leaf_reject:benefiting_sources_below_minimum",
+        "component:root_reject:no_improvement",
+        "component:root_reject:benefiting_sources_below_minimum"
+      ],
+      "selection_audit": {
+        "passed": false,
+        "improved": true,
+        "gains": [
+          {
+            "status": "extra",
+            "source": "alimalarva",
+            "correct_gain": 0,
+            "false_leaf_reduction": 2
+          }
+        ],
+        "counts": {
+          "known": 219,
+          "intra": 69,
+          "extra": 88,
+          "known_correct": 195,
+          "intra_correct": 27,
+          "extra_correct": 65,
+          "leaf_outputs": 228
+        },
+        "known_added_harm": 1,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": true,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": false,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "known_added_harm",
+          "benefiting_sources_below_minimum"
+        ]
+      },
+      "component_audits": {
+        "leaf_reject": {
+          "passed": false,
+          "improved": true,
+          "gains": [
+            {
+              "status": "extra",
+              "source": "alimalarva",
+              "correct_gain": 0,
+              "false_leaf_reduction": 2
+            }
+          ],
+          "counts": {
+            "known": 219,
+            "intra": 69,
+            "extra": 88,
+            "known_correct": 195,
+            "intra_correct": 27,
+            "extra_correct": 65,
+            "leaf_outputs": 228
+          },
+          "known_added_harm": 1,
+          "near_added_harm": 0,
+          "near_parent_path_loss": 0,
+          "admissible": false,
+          "failure_flags": {
+            "known_added_harm": true,
+            "near_added_harm": false,
+            "near_parent_path_loss": false,
+            "source_correct_decline": false,
+            "leaf_precision_decline": false,
+            "no_improvement": false,
+            "benefiting_sources_below_minimum": true
+          },
+          "rejection_reasons": [
+            "known_added_harm",
+            "benefiting_sources_below_minimum"
+          ]
+        },
+        "root_reject": {
+          "passed": true,
+          "improved": false,
+          "gains": [],
+          "counts": {
+            "known": 219,
+            "intra": 69,
+            "extra": 88,
+            "known_correct": 195,
+            "intra_correct": 27,
+            "extra_correct": 65,
+            "leaf_outputs": 228
+          },
+          "known_added_harm": 0,
+          "near_added_harm": 0,
+          "near_parent_path_loss": 0,
+          "admissible": false,
+          "failure_flags": {
+            "known_added_harm": false,
+            "near_added_harm": false,
+            "near_parent_path_loss": false,
+            "source_correct_decline": false,
+            "leaf_precision_decline": false,
+            "no_improvement": true,
+            "benefiting_sources_below_minimum": true
+          },
+          "rejection_reasons": [
+            "no_improvement",
+            "benefiting_sources_below_minimum"
+          ]
+        }
+      }
+    }
+  ],
+  "outer": {
+    "status": "heldout_degraded",
+    "complete": true,
+    "unique_images": 376,
+    "scored_images": 376,
+    "output_used_for_selection": false,
+    "validation_scope": "exploratory_postprocessor_on_previously_used_development",
+    "independent_model_level_validation": false,
+    "development_reused_for_method_design": true,
+    "confirmatory_validation": false,
+    "report": {
+      "baseline": {
+        "counts": {
+          "known": 219,
+          "intra": 69,
+          "extra": 88,
+          "known_correct": 195,
+          "intra_correct": 29,
+          "extra_correct": 70,
+          "leaf_outputs": 225
+        },
+        "metrics": {
+          "known_end_to_end_leaf_accuracy": 0.8904109589041096,
+          "intra_correct_fallback_rate": 0.42028985507246375,
+          "extra_global_unknown_recall": 0.7954545454545454,
+          "open_world_accepted_leaf_precision": 0.8666666666666667
+        },
+        "checks": {
+          "known_end_to_end_leaf_accuracy": false,
+          "intra_correct_fallback_rate": false,
+          "extra_global_unknown_recall": false,
+          "open_world_accepted_leaf_precision": false
+        },
+        "targets_passed": false
+      },
+      "selected": {
+        "counts": {
+          "known": 219,
+          "intra": 69,
+          "extra": 88,
+          "known_correct": 193,
+          "intra_correct": 30,
+          "extra_correct": 70,
+          "leaf_outputs": 222
+        },
+        "metrics": {
+          "known_end_to_end_leaf_accuracy": 0.8812785388127854,
+          "intra_correct_fallback_rate": 0.43478260869565216,
+          "extra_global_unknown_recall": 0.7954545454545454,
+          "open_world_accepted_leaf_precision": 0.8693693693693694
+        },
+        "checks": {
+          "known_end_to_end_leaf_accuracy": false,
+          "intra_correct_fallback_rate": false,
+          "extra_global_unknown_recall": false,
+          "open_world_accepted_leaf_precision": false
+        },
+        "targets_passed": false
+      },
+      "known_added_harm": {
+        "numerator": 2,
+        "denominator": 219,
+        "rate": 0.0091324200913242,
+        "image_sha256": [
+          "458d27eaab17d129ad39bb8f671cfeaef6d74ce92a4f2c6299c4c9c15af80f25",
+          "607dedf91da3e6539d0f8ccc721d5dcf479ab5cdfbb2ae3a2022f8ca27fe58d2"
+        ]
+      },
+      "near_added_harm": {
+        "numerator": 0,
+        "denominator": 69,
+        "rate": 0.0,
+        "image_sha256": []
+      },
+      "near_parent_path_loss": {
+        "numerator": 0,
+        "denominator": 69,
+        "rate": 0.0,
+        "image_sha256": []
+      },
+      "preservation_audit": {
+        "known_correct_images_preserved": false,
+        "near_correct_images_preserved": true,
+        "unknown_source_correct_counts_preserved": true,
+        "leaf_precision_preserved": true,
+        "near_parent_paths_preserved": true,
+        "passed": false
+      },
+      "source_macro": {
+        "intra": {
+          "source_count": 4,
+          "baseline": 0.4660714285714286,
+          "selected": 0.5285714285714286
+        },
+        "extra": {
+          "source_count": 4,
+          "baseline": 0.8070211038961039,
+          "selected": 0.8070211038961039
+        }
+      }
+    }
+  },
+  "outer_folds": [
+    {
+      "fold_id": 0,
+      "status": "no_feasible_candidate",
+      "reject_rules": [],
+      "audit": {
+        "passed": true,
+        "improved": false,
+        "gains": [],
+        "counts": {
+          "known": 54,
+          "intra": 7,
+          "extra": 16,
+          "known_correct": 50,
+          "intra_correct": 4,
+          "extra_correct": 13,
+          "leaf_outputs": 55
+        },
+        "known_added_harm": 0,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": false,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": true,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "no_improvement",
+          "benefiting_sources_below_minimum"
+        ]
+      }
+    },
+    {
+      "fold_id": 1,
+      "status": "no_feasible_candidate",
+      "reject_rules": [],
+      "audit": {
+        "passed": true,
+        "improved": false,
+        "gains": [],
+        "counts": {
+          "known": 55,
+          "intra": 30,
+          "extra": 22,
+          "known_correct": 47,
+          "intra_correct": 12,
+          "extra_correct": 21,
+          "leaf_outputs": 62
+        },
+        "known_added_harm": 0,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": false,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": true,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "no_improvement",
+          "benefiting_sources_below_minimum"
+        ]
+      }
+    },
+    {
+      "fold_id": 2,
+      "status": "heldout_degraded",
+      "reject_rules": [
+        {
+          "action": "leaf_reject",
+          "x_max": -1.8182670834208208,
+          "y_max": -6.342735290527344
+        }
+      ],
+      "audit": {
+        "passed": false,
+        "improved": true,
+        "gains": [
+          {
+            "status": "intra",
+            "source": "sugiurachengshanense",
+            "correct_gain": 1,
+            "false_leaf_reduction": 1
+          }
+        ],
+        "counts": {
+          "known": 55,
+          "intra": 4,
+          "extra": 22,
+          "known_correct": 49,
+          "intra_correct": 3,
+          "extra_correct": 18,
+          "leaf_outputs": 50
+        },
+        "known_added_harm": 2,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": true,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": false,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "known_added_harm",
+          "benefiting_sources_below_minimum"
+        ]
+      }
+    },
+    {
+      "fold_id": 3,
+      "status": "no_feasible_candidate",
+      "reject_rules": [],
+      "audit": {
+        "passed": true,
+        "improved": false,
+        "gains": [],
+        "counts": {
+          "known": 55,
+          "intra": 28,
+          "extra": 28,
+          "known_correct": 47,
+          "intra_correct": 11,
+          "extra_correct": 18,
+          "leaf_outputs": 55
+        },
+        "known_added_harm": 0,
+        "near_added_harm": 0,
+        "near_parent_path_loss": 0,
+        "admissible": false,
+        "failure_flags": {
+          "known_added_harm": false,
+          "near_added_harm": false,
+          "near_parent_path_loss": false,
+          "source_correct_decline": false,
+          "leaf_precision_decline": false,
+          "no_improvement": true,
+          "benefiting_sources_below_minimum": true
+        },
+        "rejection_reasons": [
+          "no_improvement",
+          "benefiting_sources_below_minimum"
+        ]
+      }
+    }
+  ],
+  "interpretation": "No qualified deployment rule. Full-DEV feasibility does not replace held-known/source validation. The outer audit is exploratory and does not select deployment rules. No TEST results were opened for this release."
+}
