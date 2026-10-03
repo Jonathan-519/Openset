@@ -41,6 +41,13 @@ def effective_config(path, seed=None):
     _number(geometry["shrinkage"], "geometry.shrinkage", 0., 1., zero=True)
     _number(geometry["ridge"], "geometry.ridge", 0., 1.)
     settings = cfg["calibration"]
+    if isinstance(settings, dict) and settings.get("decoder") == "local_guarded":
+        from .local import settings as local_settings
+        # Baseline calibration settings come from the audited source run only.
+        if "baseline_calibration" in settings:
+            raise ValueError("baseline_calibration must come from the frozen source")
+        local_settings(settings)
+        return cfg
     required = {"weights", "grid_points", "source_loo", "source_loo_safeguard"}
     if (not isinstance(settings, dict) or not required <= set(settings)
             or set(settings) - required - {"parent_weights", "leaf_weights"}):

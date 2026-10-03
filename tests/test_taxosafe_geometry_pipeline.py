@@ -26,6 +26,33 @@ class GeometryPipelineContracts(unittest.TestCase):
         self.cfg["calibration"].update(grid_points=3, weights=[0., 1.],
                                         source_loo=False, source_loo_safeguard=False)
 
+    def test_local_full_cycle_uses_new_decoder_without_test_fitting(self):
+        from taxosafe_geometry import local, pipeline, protocol
+        self.make_source(with_test=True)
+        self.cfg = protocol.effective_config(protocol.PROJECT_ROOT /
+            "configs/Zooplankton_Taxonomic_Tree/TaxoSafe_reference_local.yml")
+        self.cfg["calibration"].update(source_loo=False, source_loo_safeguard=False,
+                                      min_known_per_parent=1, max_thresholds=3)
+        original = fixture.artifact_snapshot(self.source)
+        pipeline.fit(self.cfg, self.source, self.directory, self.device)
+        pipeline.calibrate_run(self.cfg, self.source, self.directory, self.device)
+        router = reference_protocol.read_json(self.directory / "calibration/router.json")
+        self.assertEqual(router["decoder"], "local_guarded")
+        self.calls.clear()
+        with patch.object(local, "calibrate", side_effect=AssertionError("TEST cannot fit local rules")), \
+                patch.object(pipeline.HierarchicalGeometry, "fit", side_effect=AssertionError("TEST cannot fit geometry")):
+            receipt = pipeline.test_run(self.cfg, self.source, self.directory, self.device)
+        self.assertEqual(self.calls, [("test", reference_protocol.STAGE_SPLITS["test"])])
+        self.assertTrue(receipt["candidate_preserved"])
+        self.assertEqual(fixture.artifact_snapshot(self.source), original)
+        old = fixture.read_records(self.directory / "test/baseline_predictions.jsonl")
+        new = fixture.read_records(self.directory / "test/predictions.jsonl")
+        for before, after in zip(old, new):
+            self.assertEqual(after["decoder"], "local_guarded")
+            if after["prediction_type"] == "known":
+                self.assertEqual(before["prediction_type"], "known")
+                self.assertEqual(before["leaf"], after["leaf"])
+
     def test_fit_keeps_source_frozen_and_fits_only_unique_known_train(self):
         from taxosafe_geometry import pipeline
         from taxosafe_refine import importer

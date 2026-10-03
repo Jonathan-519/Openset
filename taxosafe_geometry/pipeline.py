@@ -28,6 +28,20 @@ SCHEMA_VERSION = protocol.SCHEMA_VERSION
 SCORE_NAMES = ("baseline_parent", "baseline_leaf", "geometry_parent", "geometry_leaf")
 
 
+def _decoder(cfg):
+    if cfg["calibration"].get("decoder") == "local_guarded":
+        from . import local
+        return local
+    return calibration
+
+
+def _routed_metrics(cfg, rows):
+    metrics = _metrics(rows)
+    if cfg["calibration"].get("decoder") == "local_guarded":
+        metrics["score_semantics"] = "root/local knownness are discrete route indicators; see component_scores.json for continuous evidence AUROC"
+    return metrics
+
+
 @torch.no_grad()
 def collect_features(groups, reference, device, geometry=None, scales=None, keep_features=True):
     """One original visual pass per unique image, with both frozen branches."""
@@ -258,17 +272,23 @@ def _preservation(baseline, routed, router):
     if set(before) != set(after):
         raise ValueError("Baseline/geometry evaluation identities differ")
     fallback = not router["geometry_enabled"]
-    changed_parent, changed_leaf = 0, 0
+    changed_parent, changed_leaf, changed_fallback_parent = 0, 0, 0
     for digest, new in after.items():
         old = before[digest]
         if any(old.get(key) != new.get(key) for key in ("candidate_parent", "candidate_leaf")):
             raise ValueError("Geometry must preserve the original candidate ranking")
         changed_parent += int((old["prediction_type"] == "global_unknown") != (new["prediction_type"] == "global_unknown"))
         changed_leaf += int((old["prediction_type"] == "known") != (new["prediction_type"] == "known"))
+        changed_fallback_parent += int(new["prediction_type"] == "intra_unknown" and
+                                       new["parent"] != old["candidate_parent"])
+        if router.get("decoder") == "local_guarded" and new["prediction_type"] == "known":
+            if old["prediction_type"] != "known" or new["leaf"] != old["leaf"]:
+                raise ValueError("Local corrections cannot promote or replace a known leaf")
         if fallback and any(old.get(key) != new.get(key) for key in ("prediction_type", "output_node", "parent", "leaf")):
             raise ValueError("Geometry fallback must reproduce every baseline decision")
     return {"unique_images": len(after), "candidate_preserved": True, "candidate_preserved_count": len(after),
             "parent_gate_changed_count": changed_parent, "leaf_gate_changed_count": changed_leaf,
+            "fallback_parent_changed_count": changed_fallback_parent,
             "fallback": fallback, "fallback_decisions_exact": fallback}
 
 
@@ -282,11 +302,12 @@ def calibrate_run(cfg, reference_directory, directory, device):
     reproduction = _baseline_reproduction(reference, records)
     protocol.write_json(output / "baseline_reproduction.json", reproduction)
     settings = dict(cfg["calibration"], baseline_calibration=copy.deepcopy(reference.config["calibration"]))
-    router = calibration.calibrate(records["val_known"], records["val_intra"], records["val_extra"],
+    decoder = _decoder(cfg)
+    router = decoder.calibrate(records["val_known"], records["val_intra"], records["val_extra"],
                                    reference.router, reference.meta, settings)
     router.update(signature=fitted["signature"], model_sha256=fitted["model"]["sha256"],
                   source_binding_sha256=protocol.object_hash(reference.binding))
-    routed = {key: calibration.apply_router(rows, router, reference.meta) for key, rows in records.items()}
+    routed = {key: decoder.apply_router(rows, router, reference.meta) for key, rows in records.items()}
     baseline = {key: support_pipeline.apply_router(rows, reference.router, reference.meta) for key, rows in records.items()}
     preservation = _preservation(baseline, routed, router)
     report = router["validation_report"]
@@ -296,9 +317,12 @@ def calibrate_run(cfg, reference_directory, directory, device):
     for name, value in {"router": router, "validation_report": report,
                         "baseline_validation_report": calibration.evaluate_records(
                             [r for rows in baseline.values() for r in rows], reference.meta),
-                        "development_metrics": _metrics(routed), "baseline_metrics": _metrics(baseline),
+                        "development_metrics": _routed_metrics(cfg, routed), "baseline_metrics": _metrics(baseline),
                         "preservation": preservation, "inference_timing": timings}.items():
         protocol.write_json(output / (name + ".json"), value)
+    if decoder is not calibration:
+        protocol.write_json(output / "component_scores.json", decoder.score_diagnostics(
+            [r for rows in records.values() for r in rows]))
     protocol.write_records(output / "development_scores.jsonl", [r for rows in records.values() for r in rows])
     protocol.write_records(output / "development_predictions.jsonl", [r for rows in routed.values() for r in rows])
     _assert_source(reference)
@@ -335,12 +359,12 @@ def test_run(cfg, reference_directory, directory, device):
     groups, audit = _stage_rows(reference, "test")
     output = protocol.claim_stage(directory, "test")
     records, _, timings = collect_features(groups, reference, device, geometry, scales, keep_features=False)
-    routed = {key: calibration.apply_router(rows, router, reference.meta) for key, rows in records.items()}
+    routed = {key: _decoder(cfg).apply_router(rows, router, reference.meta) for key, rows in records.items()}
     baseline = {key: support_pipeline.apply_router(rows, reference.router, reference.meta) for key, rows in records.items()}
     preservation = _preservation(baseline, routed, router)
     unique = {key: calibration.unique_records(rows) for key, rows in routed.items()}
     baseline_unique = {key: baseline_unique_records(rows) for key, rows in baseline.items()}
-    metrics = _metrics(unique)
+    metrics = _routed_metrics(cfg, unique)
     summary = calibration.evaluate_records([r for rows in routed.values() for r in rows], reference.meta)
     baseline_summary = calibration.evaluate_records([r for rows in baseline.values() for r in rows], reference.meta)
     gates = calibration.evaluate_gates(metrics)
@@ -350,10 +374,13 @@ def test_run(cfg, reference_directory, directory, device):
             for row in rows:
                 row["evaluation_weight"] = int(row["image_sha256"] not in seen)
                 seen.add(row["image_sha256"])
-    for name, value in {"metrics": metrics, "metrics_all_rows": _metrics(routed), "summary": summary,
+    for name, value in {"metrics": metrics, "metrics_all_rows": _routed_metrics(cfg, routed), "summary": summary,
                         "baseline_metrics": _metrics(baseline_unique), "baseline_summary": baseline_summary,
                         "preservation": preservation, "gates": gates, "inference_timing": timings}.items():
         protocol.write_json(output / (name + ".json"), value)
+    if _decoder(cfg) is not calibration:
+        protocol.write_json(output / "component_scores.json", _decoder(cfg).score_diagnostics(
+            [r for rows in records.values() for r in rows]))
     protocol.write_records(output / "predictions.jsonl", [r for rows in routed.values() for r in rows])
     protocol.write_records(output / "baseline_predictions.jsonl", [r for rows in baseline.values() for r in rows])
     _assert_source(reference)

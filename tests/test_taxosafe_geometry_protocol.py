@@ -47,6 +47,16 @@ class GeometryProtocolTest(unittest.TestCase):
         self.cfg["calibration"]["source_loo_safeguard"] = False
         self.assertEqual(self.parse(self.cfg), self.cfg)
 
+    def test_local_config_is_explicit_and_rejects_untrusted_baseline_settings(self):
+        path = protocol.PROJECT_ROOT / "configs/Zooplankton_Taxonomic_Tree/TaxoSafe_reference_local.yml"
+        cfg = protocol.effective_config(path)
+        self.assertEqual(cfg["calibration"]["decoder"], "local_guarded")
+        self.assertEqual(self.parse(cfg), cfg)
+        self.assertNotEqual(protocol.signature(cfg, {}), protocol.signature(self.cfg, {}))
+        cfg["calibration"]["baseline_calibration"] = {"decoder": "membership"}
+        with self.assertRaisesRegex(ValueError, "frozen source"):
+            self.parse(cfg)
+
 
 if __name__ == "__main__":
     unittest.main()
