@@ -1,5 +1,7 @@
 # 冻结 reference 基线的细粒度拒识精修
 
+> 2026-10-03 实测更新：本入口 TEST known 由 94.00% 降为 93.11%，near 由 60.78% 升为 62.75%，extra 保持 80.88%，未通过全部验收。代码保留用于复现与消融；后续独立实验使用 [层级相对距离验证](TAXOSAFE_GEOMETRY.md)，直接复用 reference 源实验。
+
 本方案直接使用已完成的 **reference v3** 实验，保留其编码器、类别排序、支持库、父级成员性分数以及父级阈值，只训练新的叶级重构验证器。它不需要重新训练 MaPLe，不接受 relation v4 或旧 DCBS/OE 检查点。原 `train_taxosafe_new.py`、`calibrate_taxosafe_new.py`、`test_taxosafe_new.py` 的行为与配置保持不变。
 
 算法依据、适配细节和局限见 [研究说明](TAXOSAFE_REFERENCE_REFINE_RESEARCH.md)。默认使用冻结的全局 fine 特征，不使用本次实验中高度重复的四个 learned local token。每类采用无 bias 的 `512 → 16 → 512` 重构模块和 tanh；默认 23 类共新增 376,833 个可训练参数（含一个正分类尺度），旧模型参数全部冻结。

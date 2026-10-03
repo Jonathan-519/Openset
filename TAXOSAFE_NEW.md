@@ -1,6 +1,8 @@
 # TaxoSafe new：支持集条件化的层级证据学习
 
-> 2026-10-03 更新：relation trial 1 未改善总体表现。当前建议基于较优 reference v3 做独立精修，见 [冻结 reference 的细粒度拒识运行说明](docs/TAXOSAFE_REFERENCE_REFINE.md)。该入口复用已有权重，不需要重训 MaPLe，并明确报告父级路由造成的性能上限。
+> 2026-10-03 最新更新：reference 重训复现 94% known；重构精修仅增加 4 张 near 正确回退，同时损失 4 张 known 正确识别。当前新增 [层级相对距离验证入口](docs/TAXOSAFE_GEOMETRY.md)，复用现有 reference 权重，允许独立校准父门，并加强逐样本已知保护和未知来源留出检验。新方法的真实 GPU 指标仍待运行验证。[实验分析](docs/REFERENCE_REFINE_TRIAL1_REVIEW_20261003.md) / [文献与方法](docs/TAXOSAFE_GEOMETRY_RESEARCH.md)。
+
+> 历史 [重构精修入口](docs/TAXOSAFE_REFERENCE_REFINE.md) 继续保留；它固定父门，无法突破该阶段的父级路由上限。
 
 > 本页保留早期 `TaxoSafe_support_new.yml` 的使用说明。本轮新增的类别判别／成员性分离方案、TRAIN 内部严格留类验证及显式新配置运行命令，见 [TaxoSafe decoupled 运行说明](docs/TAXOSAFE_DECOUPLED.md)。
 

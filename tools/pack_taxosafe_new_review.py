@@ -1,4 +1,4 @@
-"""Package a support or frozen-refinement run's text, without weights/images."""
+"""Package support, reconstruction or geometry text, without weights/images."""
 
 import argparse
 from datetime import datetime, timezone
@@ -29,10 +29,18 @@ def pack(run, output):
     if not config.exists():
         config = run / "refinement/config.json"
         schema = "taxosafe_refine_review_v1"
+    if not config.exists():
+        config = run / "geometry/config.json"
+        schema = "taxosafe_geometry_review_v1"
     if not config.is_file() or config.is_symlink() or config.parent.is_symlink():
-        raise ValueError("Expected training/config.json or refinement/config.json: " + str(run))
+        raise ValueError("Expected training/config.json, refinement/config.json or geometry/config.json: " + str(run))
     configuration = json.loads(config.read_text(encoding="utf-8"))
-    if schema == "taxosafe_refine_review_v1":
+    if schema == "taxosafe_geometry_review_v1":
+        if (not isinstance(configuration.get("geometry"), dict)
+                or not isinstance(configuration.get("calibration"), dict)
+                or "support" in configuration or "dcbs" in configuration):
+            raise ValueError("Expected a frozen-reference geometry configuration")
+    elif schema == "taxosafe_refine_review_v1":
         if (configuration.get("features") not in ("fine", "raw_spatial")
                 or not isinstance(configuration.get("reconstruction"), dict)
                 or "support" in configuration or "dcbs" in configuration):

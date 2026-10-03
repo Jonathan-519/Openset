@@ -1,0 +1,61 @@
+{
+  "method": "frozen_reference_geometry_v1",
+  "created_at_utc": "2026-10-03T08:15:02.035783+00:00",
+  "base_commit": "243a7570a1c14afd4961da39fd1f85395ffd80b4",
+  "software_tests": {
+    "command": "python tools/run_unit_tests.py --quiet",
+    "discovered": 377,
+    "passed": 371,
+    "skipped_cuda": 6,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 14.259
+  },
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false
+  },
+  "python38_syntax": 200,
+  "legacy_source_byte_identity": {
+    "passed": true,
+    "compared_to": "243a7570a1c14afd4961da39fd1f85395ffd80b4",
+    "paths": [
+      "taxosafe_support",
+      "taxosafe_dcbs",
+      "taxosafe_refine",
+      "models",
+      "loader",
+      "losses",
+      "train_taxosafe_new.py",
+      "calibrate_taxosafe_new.py",
+      "test_taxosafe_new.py",
+      "refine_taxosafe_reference.py",
+      "metrics_open.py"
+    ]
+  },
+  "verified_contracts": [
+    "TRAIN-only geometry and score scales",
+    "original reference parameters and bank remain frozen",
+    "DEV baseline scores and decisions replay",
+    "unique-image feature/label alignment",
+    "TEST runs without TRAIN/DEV images and cannot refit",
+    "all-source fallback or one-source gain cannot enable geometry",
+    "held source excluded from baseline thresholds, fusion weights and grids",
+    "artifact and source binding tampering rejected",
+    "fallback baseline decisions exact",
+    "review archive excludes feature caches and weights"
+  ],
+  "real_image_gpu_experiment_performed": false,
+  "new_recognition_metrics_available": false,
+  "limits": [
+    "Software tests do not establish the four recognition acceptance gates.",
+    "DEV preservation is not a guarantee of TEST known accuracy.",
+    "Candidate rankings remain fixed; wrong-parent candidates cannot be repaired.",
+    "Repeated use of this TEST for diagnosis and method design requires independent final evaluation."
+  ],
+  "uploaded_results": {
+    "reference": "31845d20fe342b65ab5eadf9884499373c2c8e77ac20717fba4992b689b2d212",
+    "refinement": "85f0831852adfc550d02e76070e568d18d934fe69c93104d8655eb319ae73352"
+  }
+}
