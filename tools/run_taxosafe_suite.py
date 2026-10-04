@@ -97,7 +97,17 @@ def make_plan(config, suite, seed=None, trial=None, run_dir=None):
         variants[name] = {"config": portable(path), "artifacts": portable(suite / "artifacts" / name)}
     inputs = {source, training, resolve(TEMPLATE), resolve(cfg["data"]["hierarchy"])}
     inputs.update(resolve(cfg["data"][key]) for key in (
-        "train", "val_known", "val_intra", "val_extra", "test_known", "test_intra", "test_extra", "oe_train"))
+        "train", "val_known", "val_intra", "val_extra",
+        "test_known", "test_intra", "test_extra"))
+    # OE is an optional training input. Do not require or freeze an oe_train
+    # manifest when the configured training objective does not consume it.
+    if float(cfg.get("loss", {}).get("lambda_oe", 0.0)) > 0.0:
+        oe_train = cfg.get("data", {}).get("oe_train")
+        if not oe_train:
+            raise ValueError(
+                "loss.lambda_oe > 0 requires data.oe_train"
+            )
+        inputs.add(resolve(oe_train))
     for directory in ("models", "loader", "losses", "optim", "taxosafe_visual"):
         inputs.update((ROOT / directory).rglob("*.py"))
     inputs.update(ROOT / name for name in (

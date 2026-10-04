@@ -303,6 +303,93 @@ def _validate_open_cut(open_cut, batch_size, device):
     return label_names, open_target, pseudo_mask
 
 
+
+def _real_intra_unknown_loss(model, value, device, cfg, hier_meta):
+    """Supervise development near-unknowns without exposing locked test taxa.
+
+    Each sample carries its true parent ID. The loss keeps the sample inside
+    that parent while teaching the explicit local-unknown prompt to outrank
+    every known child in the branch.
+    """
+    image = value[0].to(device)
+    parent_target = value[1].to(device=device, dtype=torch.long)
+    if torch.any(parent_target < 0) or torch.any(
+        parent_target >= hier_meta["num_parents"]
+    ):
+        raise ValueError(
+            "train_intra labels must be parent IDs in [0, {}]".format(
+                hier_meta["num_parents"] - 1
+            )
+        )
+
+    unknown_names = [
+        cfg.get("open_treecut", {}).get(
+            "unknown_template", "novel member of {}"
+        ).format(parent_name)
+        for parent_name in hier_meta["parent_names"]
+    ]
+    scores, _ = score_label_sets(
+        model,
+        image,
+        {
+            "parent": hier_meta["parent_names"],
+            "leaf": hier_meta["leaf_names"],
+            "local_unknown": unknown_names,
+        },
+    )
+    parent_loss = F.cross_entropy(scores["parent"], parent_target)
+    local_terms, margin_terms = [], []
+    margin = float(cfg.get("loss", {}).get("real_intra_margin", 0.15))
+    for parent_id, children in enumerate(hier_meta["children_by_parent"]):
+        mask = parent_target == parent_id
+        if not torch.any(mask):
+            continue
+        active = torch.as_tensor(
+            children, dtype=torch.long, device=device
+        )
+        child_logits = scores["leaf"][mask][:, active]
+        unknown_logit = scores["local_unknown"][
+            mask, parent_id : parent_id + 1
+        ]
+        joint = torch.cat([child_logits, unknown_logit], dim=1)
+        target = torch.full(
+            (joint.shape[0],),
+            child_logits.shape[1],
+            dtype=torch.long,
+            device=device,
+        )
+        local_terms.append(F.cross_entropy(joint, target))
+        strongest_child = child_logits.max(dim=1).values
+        margin_terms.append(
+            F.relu(margin + strongest_child - unknown_logit[:, 0]).mean()
+        )
+
+    zero = scores["parent"].sum() * 0.0
+    local_loss = torch.stack(local_terms).mean() if local_terms else zero
+    margin_loss = torch.stack(margin_terms).mean() if margin_terms else zero
+    total = (
+        float(cfg.get("loss", {}).get("lambda_real_intra_parent", 0.25))
+        * parent_loss
+        + float(cfg.get("loss", {}).get("lambda_real_intra_local", 1.0))
+        * local_loss
+        + float(cfg.get("loss", {}).get("lambda_real_intra_margin", 0.5))
+        * margin_loss
+    )
+    with torch.no_grad():
+        parent_acc = (
+            scores["parent"].argmax(dim=1).eq(parent_target).float().mean()
+            * 100.0
+        )
+    return {
+        "loss": total,
+        "parent_loss": parent_loss,
+        "local_loss": local_loss,
+        "margin_loss": margin_loss,
+        "parent_acc": parent_acc,
+        "batch_size": int(parent_target.numel()),
+    }
+
+
 def train_one_epoch(
     model,
     optimizer,
@@ -320,6 +407,7 @@ def train_one_epoch(
     hier_meta=None,
     open_treecut=None,
     oe_data_loader=None,
+    intra_data_loader=None,
 ):
     """Train one TaxoSafe epoch on known leaf images."""
     del treecut_generator  # retained only for call compatibility
@@ -349,6 +437,11 @@ def train_one_epoch(
         "loss_local_unknown": averageMeter(),
         "loss_tax_contrast": averageMeter(),
         "loss_sibling_boundary": averageMeter(),
+        "loss_real_intra": averageMeter(),
+        "loss_real_intra_parent": averageMeter(),
+        "loss_real_intra_local": averageMeter(),
+        "loss_real_intra_margin": averageMeter(),
+        "real_intra_parent_acc": averageMeter(),
         "sibling_boundary_pair_count": averageMeter(),
         "sibling_boundary_margin": averageMeter(),
         "root_known_score": averageMeter(),
@@ -368,6 +461,9 @@ def train_one_epoch(
     print_freq = cfg.get("print_freq", 20)
     model.train()
     lambda_oe = float(cfg.get("loss", {}).get("lambda_oe", 0.0))
+    lambda_real_intra = float(
+        cfg.get("loss", {}).get("lambda_real_intra", 0.0)
+    )
     if lambda_oe > 0.0 and oe_data_loader is None:
         raise ValueError(
             "loss.lambda_oe is positive, but train_one_epoch did not receive "
@@ -380,6 +476,15 @@ def train_one_epoch(
         if lambda_oe > 0.0 and oe_data_loader is not None
         else None
     )
+    intra_iterator = (
+        iter(intra_data_loader)
+        if lambda_real_intra > 0.0 and intra_data_loader is not None
+        else None
+    )
+    if lambda_real_intra > 0.0 and intra_iterator is None:
+        raise ValueError(
+            "loss.lambda_real_intra is positive, but train_intra was not loaded"
+        )
     if oe_iterator is not None:
         meter["root_oe_score"] = averageMeter()
         meter["leaf_oe_score"] = averageMeter()
@@ -511,6 +616,22 @@ def train_one_epoch(
             unknown_text_features=representations["text"]["local_unknown"],
         )
         loss = loss_output["loss"]
+        real_intra = None
+        if intra_iterator is not None:
+            try:
+                intra_value = next(intra_iterator)
+            except StopIteration:
+                intra_iterator = iter(intra_data_loader)
+                intra_value = next(intra_iterator)
+            real_intra = _real_intra_unknown_loss(
+                model=model,
+                value=intra_value,
+                device=device,
+                cfg=cfg,
+                hier_meta=hier_meta,
+            )
+            loss = loss + lambda_real_intra * real_intra["loss"]
+
         loss_ndtl = loss_output["loss_ndtl"]
         loss_ncl = loss_output["loss_ncl"]
         loss_cons = loss_output["loss_cons"]
@@ -560,6 +681,23 @@ def train_one_epoch(
             pseudo_rate = pseudo_mask.float().mean() * 100.0
 
         meter["loss"].update(loss.item(), batch_size)
+        if real_intra is not None:
+            intra_bs = real_intra["batch_size"]
+            meter["loss_real_intra"].update(
+                real_intra["loss"].item(), intra_bs
+            )
+            meter["loss_real_intra_parent"].update(
+                real_intra["parent_loss"].item(), intra_bs
+            )
+            meter["loss_real_intra_local"].update(
+                real_intra["local_loss"].item(), intra_bs
+            )
+            meter["loss_real_intra_margin"].update(
+                real_intra["margin_loss"].item(), intra_bs
+            )
+            meter["real_intra_parent_acc"].update(
+                real_intra["parent_acc"].item(), intra_bs
+            )
         meter["acc"].update(leaf_acc.item(), batch_size)
         meter["loss_ndtl"].update(loss_ndtl.item(), batch_size)
         meter["loss_ncl"].update(loss_ncl.item(), batch_size)

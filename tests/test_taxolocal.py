@@ -3,7 +3,13 @@
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
+
+import numpy as np
+from PIL import Image
 
 from prepro.prepare_taxolocal_data import (
     SPECIES_ASSIGNMENT,
@@ -31,12 +37,33 @@ class DataProtocolTests(unittest.TestCase):
             self.assertEqual(set(split), {"Copepoda", "Medusae"})
 
     def test_generated_protocol_is_species_disjoint(self):
-        path = (
-            ROOT
-            / "prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1"
-            / "split_protocol.json"
-        )
-        report = json.loads(path.read_text(encoding="utf-8"))
+        # Exercise the original generator in isolation; the old assertion read
+        # an untracked 119/117-image research artifact that need not exist.
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            random = np.random.default_rng(19)
+            counts = {"development": iter((24, 24, 24, 24, 23)),
+                      "locked_test": iter((24, 24, 23, 23, 23))}
+            for split, parent, species in declared_species():
+                species_dir = root / "prepro/raw/new" / parent / species
+                species_dir.mkdir(parents=True)
+                for index in range(next(counts[split])):
+                    pixels = random.integers(0, 256, (12, 12, 3), dtype=np.uint8)
+                    Image.fromarray(pixels).save(species_dir / (str(index) + ".png"))
+            manifests = root / "prepro/data/known_fixture"
+            manifests.mkdir(parents=True)
+            known = root / "prepro/raw/Zooplankton_Taxonomic_Tree/Copepoda/Known_fixture"
+            known.mkdir(parents=True)
+            for index, split in enumerate(("train", "val_known", "test_known")):
+                Image.new("RGB", (4, 4), (index * 80, 17, 39)).save(known / (split + ".png"))
+                (manifests / ("gt_" + split + ".txt")).write_text(
+                    "views/fold1_known/Copepoda/Known_fixture/{}.png,0,0\n".format(split),
+                    encoding="utf-8")
+            subprocess.run([sys.executable, str(ROOT / "prepro/prepare_taxolocal_data.py"),
+                            "--known-manifest-dir", "prepro/data/known_fixture"],
+                           cwd=root, check=True, capture_output=True, text=True)
+            path = root / "prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1/split_protocol.json"
+            report = json.loads(path.read_text(encoding="utf-8"))
         development = set(report["development_species"])
         locked = set(report["locked_test_species"])
         self.assertFalse(development & locked)

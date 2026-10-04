@@ -1,0 +1,101 @@
+name: TaxoSafe-v11-DCBS
+seed: 1
+output_root: runs/taxosafe_v11_dcbs
+
+model:
+  arch: maple
+  name: ViT-B/16
+  prec: fp16
+  n_ctx: 2
+  ctx_init: "a photo of a"
+  prompt_depth: 3
+
+data:
+  name: Zooplankton_TaxoSafe_v11_dcbs
+  data_root: prepro/raw/Zooplankton_TT
+  near_dev_root: prepro/raw/Zooplankton_NearUnknown_Dev
+  near_test_root: prepro/raw/Zooplankton_NearUnknown_Test
+  ood_dev_root: prepro/raw/Zooplankton_OOD_Dev
+  ood_test_root: prepro/raw/Zooplankton_OOD_Test
+  train: prepro/data/Zooplankton_TT_v11_dcbs/gt_train_known.txt
+  val_known: prepro/data/Zooplankton_TT_v11_dcbs/gt_val_known.txt
+  known_preparation_audit: prepro/data/Zooplankton_TT_v11_dcbs/known_deduplication.json
+  val_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra_v10.txt
+  val_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra_v10.txt
+  test_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt
+  test_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_intra.txt
+  test_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_extra.txt
+  hierarchy: prepro/data/Zooplankton_TT_v9_rebuild/tree.npy
+  num_known_leaves: 23
+  batch_size: 12
+  eval_batch_size: 16
+  n_workers: 4
+  transform: clip
+  sampler:
+    name: hierarchical_episode
+    parents_per_batch: 2
+    species_per_parent: 3
+    images_per_species: 2
+    batches_per_epoch: 240
+    ensure_rankable_parent: true
+    pseudo_holdout_mode: epoch
+    hard_sibling_sampling: true
+
+dcbs:
+  projection_dim: 128
+  shared_projection: false
+  logit_scale: 10.0
+  root_temperature: 1.0
+  local_temperature: 1.0
+  sibling_margin: 0.1
+  loss:
+    leaf: 1.0
+    parent: 0.25
+    root_known: 0.5
+    local_known: 0.5
+    near_root: 0.5
+    near_stop: 0.5
+    extra_stop: 0.5
+    ha: 0.02
+    margin: 0.1
+  synthesis:
+    near_enabled: true
+    extra_enabled: true
+    leaf_support_quantile: 0.90
+    parent_support_quantile: 0.95
+    radius_prior_count: 10.0
+    candidates_per_parent: 256
+    keep_per_parent: 64
+    batch_samples: 32
+    near_noise: 0.02
+    extra_noise: 0.20
+
+training:
+  epochs: 120
+  warmup_epochs: 5
+  synthesis_ramp_epochs: 5
+  min_synthesis_epochs: 5
+  prompt_lr: 0.005
+  head_lr: 0.01
+  weight_decay: 0.0005
+  gradient_clip: 5.0
+  patience: 25
+
+calibration:
+  root_known_retention: 0.97
+  root_near_retention: 0.95
+  local_known_retention: 0.90
+  min_known_e2e: 0.80
+  max_closed_drop: 0.08
+  grid_points: 101
+  prior_count: 30.0
+  partial_pooling: true
+  use_margin: true
+
+evaluation_gates:
+  near_correct_fallback_min: 0.70
+  extra_global_rejection_min: 0.75
+  extra_false_known_max: 0.075
+  accepted_leaf_precision_min: 0.85
+  known_closed_accuracy_min: 0.90
+  known_e2e_min: 0.80

@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-03",
+  "base_commit": "4394be543badc2a7def2fa5a60b45b531b5a861d",
+  "method": "frozen_reference_reconstruction_v1",
+  "source_reference_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+  "scope": "New frozen feature verifier and guarded leaf calibration; no historical algorithm files changed.",
+  "tests": {
+    "command": "python tools/run_unit_tests.py --quiet",
+    "discovered": 339,
+    "passed": 334,
+    "skipped_cuda": 5,
+    "failures": 0,
+    "errors": 0,
+    "elapsed_seconds": 12.629
+  },
+  "refinement_tests": {
+    "command": "python tools/run_unit_tests.py --pattern 'test_taxosafe_refine*.py' --quiet",
+    "discovered": 39,
+    "passed": 38,
+    "skipped_cuda": 1,
+    "failures": 0,
+    "errors": 0
+  },
+  "python_sources_parsed": 188,
+  "syntax_errors": [],
+  "cli_help_checked": [
+    "refine_taxosafe_reference.py",
+    "tools/pack_taxosafe_new_review.py"
+  ],
+  "historical_algorithm_paths_byte_unchanged": true,
+  "legacy_bit_exact_parity": {
+    "legacy_v1": {
+      "baseline_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+      "direct_fixture_cases": 6,
+      "state_keys_values_and_rng_after_init": "bit_exact",
+      "all_five_support_interventions": "bit_exact",
+      "training_loss_terms_valid_counts": "bit_exact",
+      "encoded_input_and_parameter_gradients": "bit_exact",
+      "tiny_backbone_encoder_input_and_parameter_gradients": "bit_exact",
+      "known_validation_default": "bit_exact",
+      "one_query_visual_forward_reused_for_interventions": true
+    },
+    "prototype_v2": {
+      "baseline_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+      "direct_fixture_cases": 6,
+      "state_keys_values_and_rng_after_init": "bit_exact",
+      "all_five_support_interventions": "bit_exact",
+      "training_loss_terms_valid_counts": "bit_exact",
+      "encoded_input_and_parameter_gradients": "bit_exact",
+      "tiny_backbone_encoder_input_and_parameter_gradients": "bit_exact",
+      "known_validation_default": "bit_exact",
+      "one_query_visual_forward_reused_for_interventions": true
+    },
+    "reference_v3": {
+      "baseline_commit": "54dff0ed81771e4cbc14b844f22ebea06e3f9c8d",
+      "direct_fixture_cases": 6,
+      "state_keys_values_and_rng_after_init": "bit_exact",
+      "all_five_support_interventions": "bit_exact",
+      "training_loss_terms_valid_counts": "bit_exact",
+      "encoded_input_and_parameter_gradients": "bit_exact",
+      "tiny_backbone_encoder_input_and_parameter_gradients": "bit_exact",
+      "known_validation_default": "bit_exact",
+      "one_query_visual_forward_reused_for_interventions": true
+    }
+  },
+  "source_archive_signature_matches_approved_runtime": true,
+  "invariants_tested": [
+    "Source weights, support bank and source files unchanged by refinement fit",
+    "TRAIN-only feature extraction and auxiliary gradients",
+    "Reference ranking candidates, parent logits, parent threshold and root decisions unchanged",
+    "Exact baseline routing when refinement gate disabled, including unseen reconstruction scores",
+    "Development baseline evidence reproduction, raw logits and decisions",
+    "Two-stage source LOO refits only on fitting sources",
+    "TEST has no model or threshold fitting and does not reopen TRAIN/DEV image fixtures",
+    "Historical source artifact tampering or a coherently rewritten source binding rejected",
+    "One image encoder pass for global and optional spatial features",
+    "Nondefault constructor settings survive checkpoint reload"
+  ],
+  "runtime": {
+    "python": "3.12.14",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false
+  },
+  "not_verified": [
+    "Real-image GPU training and evaluation of the new verifier",
+    "TEST metric gains",
+    "GPU latency and memory",
+    "Simultaneous satisfaction of the four research gates"
+  ],
+  "fixed_parent_limit": {
+    "reference_dev_near_upper_bound_correct": 52,
+    "reference_dev_near_total": 69,
+    "reference_test_extra_correct": 220,
+    "reference_test_extra_total": 272,
+    "explanation": "Frozen parent routing cannot improve extra root rejection; its DEV near ceiling is below 85%."
+  }
+}

@@ -1,0 +1,12 @@
+# Reuses reference-v3 weights. No backbone training or optimization loop.
+# Covariance, centroids and score scales use only unique known TRAIN images.
+name: TaxoSafe-Frozen-Reference-Hierarchical-Geometry-v1
+seed: 1
+geometry:
+  shrinkage: 0.1
+  ridge: 0.0001
+calibration:
+  weights: [0.0, 0.5, 1.0]
+  grid_points: 31
+  source_loo: true
+  source_loo_safeguard: true

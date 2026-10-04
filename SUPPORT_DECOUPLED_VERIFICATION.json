@@ -1,0 +1,59 @@
+{
+  "branch": "new",
+  "base_commit": "1d7e4e432c5ceca2abd5e9f3c9530132ea9b1a0f",
+  "verified_date": "2026-10-01",
+  "verification_type": "software_compatibility_and_cpu_integration_not_model_accuracy",
+  "new_method": "support_decoupled_v2",
+  "opt_in_config": "configs/Zooplankton_Taxonomic_Tree/TaxoSafe_support_decoupled.yml",
+  "legacy_default_config_unchanged": true,
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false
+  },
+  "tests": {
+    "command": "python tools/run_unit_tests.py --quiet",
+    "passed": 224,
+    "failed": 0,
+    "errors": 0
+  },
+  "source_audit": {
+    "python_sources_parsed": 166,
+    "source_lines": 31097,
+    "syntax_errors": [],
+    "missing_python_sources": []
+  },
+  "compatibility": {
+    "legacy_cli_entrypoints_unchanged": true,
+    "original_config_and_data_manifests_unchanged": true,
+    "old_algorithm_modules_preserved": true,
+    "legacy_evidence_and_losses_bit_exact_against_base": true,
+    "legacy_state_dict_strict_load": true,
+    "legacy_balanced_calibration_biases_grid_and_hashes_identical": true,
+    "shared_io_utf8_bytes_and_public_signatures_preserved": true,
+    "historical_receipts_remain_bound_to_original_source_version": true
+  },
+  "integration_checks": [
+    "legacy and decoupled train/calibrate/test CPU receipts",
+    "membership-only gradient reaches prompt encoder and both acceptance heads",
+    "same-candidate normalized joint probabilities and empty support finite gradients",
+    "real shared-loop strict species and parent folds exclude heldout gradient/selection/support images",
+    "holdout text candidates excluded from trainable text encoding",
+    "immutable stages and artifact tampering checks",
+    "known_first feasibility metadata without relaxing targets",
+    "disabled-unfrozen OE does not block followup; enabled/historically-frozen OE remains checked",
+    "ZIP non-git inventory and safe package-qualified test discovery"
+  ],
+  "new_evidence_parameters_at_hidden_dim_32": 322,
+  "query_image_backbone_passes_per_training_step": 1,
+  "actual_gpu_training_completed": false,
+  "actual_gpu_speed_measured": false,
+  "four_targets_empirically_passed": null,
+  "limitations": [
+    "CPU synthetic integration does not establish real-image accuracy or GPU compatibility.",
+    "The new method requires fresh training with its own config and run directory.",
+    "Existing immutable runs must use their originally bound source commit.",
+    "Strict holdout reports are uncalibrated TRAIN-only transfer diagnostics, not final-test results.",
+    "Sparse local alignment, support reselection and external method reproductions are not included in this opt-in E1/E2 change."
+  ]
+}

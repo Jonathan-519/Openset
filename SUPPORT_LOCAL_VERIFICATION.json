@@ -1,0 +1,19 @@
+{
+  "previous_commit": "72bad3354baf2efe3bdbb3620a955dbacfb83695",
+  "test_command": "python tools/run_unit_tests.py --quiet",
+  "tests_run": 396,
+  "tests_passed": 390,
+  "tests_skipped": 6,
+  "skip_reason": "CUDA unavailable",
+  "python_syntax_3_8_files": 204,
+  "original_reference_support_refine_code_unchanged": true,
+  "geometry_core_and_global_fusion_unchanged": true,
+  "source_stage_and_input_interfaces_preserved": true,
+  "shell_wrapper_syntax_valid": true,
+  "selection_code_hashes_match_test_replay": true,
+  "no_test_based_rule_or_config_updates": true,
+  "real_gpu_rerun_performed": false,
+  "cached_test_score_replay_completed": true,
+  "replay_report": "docs/REFERENCE_LOCAL_TRIAL1_REVIEW_20261003.json",
+  "release_manifest": "SUPPORT_LOCAL_FILES.sha256"
+}

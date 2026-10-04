@@ -13,7 +13,7 @@ from unittest.mock import patch
 import numpy as np
 
 from taxosafe_visual import core, pipeline, residual, runtime
-from test_taxosafe_visual import toy_dataset
+from tests.test_taxosafe_visual import toy_dataset
 
 
 def fixture():

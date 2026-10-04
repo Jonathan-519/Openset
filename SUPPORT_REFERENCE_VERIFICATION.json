@@ -1,0 +1,112 @@
+{
+  "schema": "taxosafe_reference_software_verification_v1",
+  "verified_at_utc": "2026-10-02T14:34:35.191201+00:00",
+  "base_commit": "0273dbfeae02346f31b2e6a48580b30d655462f9",
+  "method": "support_reference_v3",
+  "unit_tests": {
+    "command": "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python tools/run_unit_tests.py --quiet",
+    "count": 262,
+    "status": "passed_with_cuda_test_skipped",
+    "seconds": 10.048,
+    "passed": 261,
+    "skipped": 1
+  },
+  "python_files_parsed": 171,
+  "cli_help_verified": [
+    "train_taxosafe_new.py",
+    "calibrate_taxosafe_new.py",
+    "test_taxosafe_new.py",
+    "tools/validate_taxosafe_support_holdout.py",
+    "tools/pack_taxosafe_new_review.py"
+  ],
+  "runtime": {
+    "python": "3.12",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false
+  },
+  "legacy_compatibility": {
+    "legacy_v1": {
+      "state_initialization": "bit_exact",
+      "full_forward": "bit_exact",
+      "training_loss_and_terms": "bit_exact",
+      "query_and_parameter_gradients": "bit_exact",
+      "valid_counts": "identical",
+      "baseline_commit": "0273dbfeae02346f31b2e6a48580b30d655462f9"
+    },
+    "decoupled_v2": {
+      "state_initialization": "bit_exact",
+      "full_forward": "bit_exact",
+      "training_loss_and_terms": "bit_exact",
+      "query_and_parameter_gradients": "bit_exact",
+      "valid_counts": "identical",
+      "baseline_commit": "0273dbfeae02346f31b2e6a48580b30d655462f9"
+    }
+  },
+  "contracts": [
+    "full train/calibrate/test on synthetic CPU data",
+    "one query backbone forward and one pair graph per training step",
+    "query and reference-head gradients; detached TRAIN support",
+    "self-content exclusion, support masks, empty trees and finite backward",
+    "per-leaf top-k and equal-leaf parent pooling",
+    "sibling and other-parent negative groups; singleton parent accounting",
+    "raw candidate alignment and no sibling borrowing",
+    "development-only threshold fitting with held-source grid exclusion",
+    "strict TRAIN-only species/parent folds on synthetic CPU fixtures",
+    "old CLI defaults, manifests, gates and score/loss/gradient behavior retained",
+    "stage signatures, artifact hashes, duplicate evidence and review packaging"
+  ],
+  "old_model_dev_decoder_diagnostic": {
+    "scope": "DEV-only decoder diagnostic using frozen OLD decoupled-v2 scores; NOT reference-v3 model performance",
+    "checkpoint_sha256": "6ef56353a5e7d32c238d1b14d0d2869d3bff4f73e8da7f061f4e9b7b5b22cb12",
+    "unique_images": 376,
+    "old_joint_metrics": {
+      "known_end_to_end_leaf_accuracy": 0.9041095890410958,
+      "intra_correct_fallback_rate": 0.5072463768115942,
+      "extra_global_unknown_recall": 0.6818181818181818,
+      "open_world_accepted_leaf_precision": 0.8839285714285714
+    },
+    "membership_metrics": {
+      "known_end_to_end_leaf_accuracy": 0.9041095890410958,
+      "intra_correct_fallback_rate": 0.5217391304347826,
+      "extra_global_unknown_recall": 0.7727272727272727,
+      "open_world_accepted_leaf_precision": 0.8918918918918919
+    },
+    "membership_counts": {
+      "known": 219,
+      "intra": 69,
+      "extra": 88,
+      "known_correct": 198,
+      "intra_correct": 36,
+      "extra_correct": 68,
+      "leaf_outputs": 222
+    },
+    "targets_passed": false,
+    "sampled_point_count": 2601,
+    "sampled_feasible_count": 0,
+    "evidence_sha256": "4049d2a8de54f912c70137a7c43aa0a5fbf5b58d4dbb3a652a56d387c5c01bf2",
+    "calibration_sha256": "e8a59eb300aa3580d9844a76abed9162c9064d5c708c4d18f73eec3b013f1698",
+    "test_read_or_fitted": false
+  },
+  "new_reference_model_experiments": {
+    "real_image_training_completed": false,
+    "real_image_test_metrics_available": false,
+    "strict_holdout_real_image_experiments_completed": false,
+    "v11_same_hardware_speed_parity_measured": false
+  },
+  "limits": [
+    "Software tests and old-model DEV diagnostics are not new-model accuracy results.",
+    "The original images, trained checkpoint and support binaries were not present in the review archive.",
+    "Historical TEST has been inspected during research; no TEST scores were fitted or searched in this implementation turn.",
+    "Old run receipts remain bound to their original source signatures. New configurations require fresh independent runs."
+  ],
+  "cuda_integer_count_fix": {
+    "parent_commit": "866fd0f2c6d869575a2e545f72f3aaca2e51e0a6",
+    "reported_failure": "RuntimeError: addmm_cuda not implemented for Long in reference species-per-parent counting",
+    "change": "Replace integer matrix multiplication with exact elementwise integer multiplication and sum.",
+    "algorithm_loss_and_interfaces_changed": false,
+    "cpu_sparse_bank_and_singleton_regression": "passed",
+    "cuda_regression": "tests.test_taxosafe_support_reference.ReferenceEvidenceTest.test_cuda_reference_training_loss_and_backward",
+    "cuda_regression_result": "skipped: no CUDA device in verification environment",
+    "restart_requires_fresh_run_directory": true
+  }
+}

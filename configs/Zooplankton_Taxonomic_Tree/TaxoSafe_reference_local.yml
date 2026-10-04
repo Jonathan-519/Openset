@@ -1,0 +1,13 @@
+# Frozen reference weights and TRAIN geometry; DEV-only local rule calibration.
+name: TaxoSafe-Frozen-Reference-Local-Guarded-v1
+seed: 1
+geometry:
+  shrinkage: 0.1
+  ridge: 0.0001
+calibration:
+  decoder: local_guarded
+  actions: [leaf_reject, root_reject, root_rescue, parent_repair]
+  min_known_per_parent: 10
+  max_thresholds: 257
+  source_loo: true
+  source_loo_safeguard: true

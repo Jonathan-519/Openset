@@ -62,8 +62,17 @@ def verified_training_source(source_suite, seed):
     # Source code is intentionally changing in this experiment. Preserve and
     # verify the trained checkpoint plus all data/taxonomy lists instead of
     # pretending that the entire old source tree is unchanged.
-    data_keys = ("train", "val_known", "val_intra", "val_extra", "test_known",
-                 "test_intra", "test_extra", "oe_train", "hierarchy")
+    data_keys = ["train", "val_known", "val_intra", "val_extra", "test_known",
+                 "test_intra", "test_extra", "hierarchy"]
+    oe_train = cfg["data"].get("oe_train")
+    if float(cfg.get("loss", {}).get("lambda_oe", 0.0)) > 0.0:
+        if not oe_train:
+            raise ValueError("Original enabled OE training requires data.oe_train")
+        data_keys.append("oe_train")
+    elif oe_train and suite.portable(suite.resolve(oe_train)) in original["inputs_sha256"]:
+        # Old receipts may bind an unused OE manifest. Preserve that stronger
+        # provenance check, but do not require a file that was never an input.
+        data_keys.append("oe_train")
     for key in data_keys:
         path = suite.resolve(cfg["data"][key])
         portable = suite.portable(path)
