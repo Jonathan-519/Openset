@@ -12,20 +12,20 @@ model:
   prompt_depth: 3
 data:
   name: Zooplankton_TaxoSieve_v1
-  data_root: prepro/data/images/Zooplankton_TT
-  near_dev_root: prepro/data/images/Zooplankton_NearUnknown_Dev
-  near_test_root: prepro/data/images/Zooplankton_NearUnknown_Test
-  ood_dev_root: prepro/data/images/Zooplankton_OOD_Dev
-  ood_test_root: prepro/data/images/Zooplankton_OOD_Test
-  train: prepro/data/taxosieve_v1/gt_train_known.txt
-  val_known: prepro/data/taxosieve_v1/gt_val_known.txt
-  known_preparation_audit: prepro/data/taxosieve_v1/known_deduplication.json
-  val_intra: prepro/data/taxosieve_v1/gt_val_intra.txt
-  val_extra: prepro/data/taxosieve_v1/gt_val_extra.txt
-  test_known: prepro/data/taxosieve_v1/gt_test_known.txt
-  test_intra: prepro/data/taxosieve_v1/gt_test_intra.txt
-  test_extra: prepro/data/taxosieve_v1/gt_test_extra.txt
-  hierarchy: prepro/data/taxosieve_v1/tree.npy
+  data_root: prepro/data/image/Zooplankton_TT
+  near_dev_root: prepro/data/image/Zooplankton_NearUnknown_Dev
+  near_test_root: prepro/data/image/Zooplankton_NearUnknown_Test
+  ood_dev_root: prepro/data/image/Zooplankton_OOD_Dev
+  ood_test_root: prepro/data/image/Zooplankton_OOD_Test
+  train: prepro/data/gt_train.txt
+  val_known: prepro/data/gt_val_known.txt
+  known_preparation_audit: prepro/data/known_deduplication.json
+  val_intra: prepro/data/gt_val_intra.txt
+  val_extra: prepro/data/gt_val_extra.txt
+  test_known: prepro/data/gt_test_known.txt
+  test_intra: prepro/data/gt_test_intra.txt
+  test_extra: prepro/data/gt_test_extra.txt
+  hierarchy: prepro/data/tree.npy
   num_known_leaves: 23
   batch_size: 12
   eval_batch_size: 16

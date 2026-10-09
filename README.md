@@ -2,88 +2,95 @@
 
 **TaxoSieve: Support-Intervention and Staged Evidence Verification for Hierarchical Open-Set Zooplankton Recognition**
 
-中文名称：**基于支持集干预与分阶段证据验证的浮游动物层级开集识别**。
+本版本以 `master@638853b47b0e7b8d2d7fe2ad387e030b255512c8` 为基点，适配新图像文件名、统一数据目录并删除对比实验。主实验仍是 MaPLe/CLIP reference → Known TRAIN 支持集干预 → D05 父/叶验证器 → DEV 先根后叶校准及条件 OOF → 冻结 TEST。模型、损失、训练预算、候选路径、阈值选择和评价定义没有修改。
 
-TaxoSieve 将原 H02_d05_staged 主线统一为可维护的实验名称：MaPLe/CLIP reference 训练 → Known TRAIN 支持集干预 → D05 父/叶验证器 → DEV 先根后叶校准 → 冻结 TEST。名称突出方法机制；本次是数据与工程重构，没有新增算法或证明性能提升。原 reference 候选路径、八维证据、损失、训练预算、阈值选择与评价门槛保持不变。
+## 数据和目录
 
-## 1. 当前数据与目录
+所有图像和配套标签位于 `prepro/data/`，图像目录为单数 **`image`**。标签格式仍为 `相对图像路径,标签ID,行索引`，路径相对于配置中对应的 Known/Near/Extra 图像根目录。
 
-图像统一存放在 `prepro/data/images/`，当前数据版本为 `prepro/data/taxosieve_v1/`。`prepro/raw` 只是供旧工具读取的相对符号链接，没有第二份图像。原图字节未修改、没有删除现存图像。
-
-本次从仓库基点 `d7e2f472e1564873fd0a93bd31bf8428c052ab3b` 的实际图像库存重建。它有 3,073 个图像文件，比历史协议少 84 个 TEST 图像。新数据版本明确记录这一变化，不能声称恢复了原 TEST，也不能将原 450/204/272 分母下的性能数字套用到新版本。新数据统计、逐物种数量和缺失清单见数据目录中的 `split_statistics.json`、`inventory.jsonl`、`reconciliation.json`。
-
-| 路径 | 用途 |
+| 路径 | 作用 |
 |---|---|
-| `run_taxosieve.py`、`taxosieve/` | 主入口、验证器、分阶段校准和阶段收据 |
-| `configs/taxosieve.yml`、`configs/taxosieve_reference.yml` | 固定实验配置、reference 模型与新数据路径 |
-| `prepro/build_taxosieve_dataset.py` | 当前唯一推荐的数据集构建器 |
-| `prepro/data/images/` | Known、Near DEV/TEST、Extra DEV/TEST 五个图像池 |
-| `prepro/data/taxosieve_v1/` | 当前清单、分类树、内容身份、去重与版本审计 |
-| `prepro/protocols/taxosieve_seed/` | 不可变的历史分组种子，用于保留图像归属和角色 |
-| `taxosafe_support/`、`models/`、`loader/` | 主线实际依赖的 reference 内核 |
-| `prepro/legacy_tools/` | 历史数据制作工具；不用于覆盖当前数据版本 |
-| `comparison_experiments/` | 其他方法及其历史依赖，不进入主训练流程 |
-| `reproducibility/` | 历史证明与本次工程验证，明确区分新旧数据 |
+| `prepro/data/image/` | Known、Near DEV/TEST、Extra DEV/TEST 五个图像池 |
+| `prepro/data/gt_train.txt` | Known TRAIN |
+| `prepro/data/gt_val_known.txt`、`gt_val_intra.txt`、`gt_val_extra.txt` | 开发集 |
+| `prepro/data/gt_test_known.txt`、`gt_test_intra.txt`、`gt_test_extra.txt` | 默认主实验测试集 |
+| `prepro/data/tree.npy`、`leaf_nodes.npy`、`known_leaf_order.txt` | 原 7 父类、23 已知叶类分类树 |
+| `prepro/data/protocol.json`、`inventory.jsonl`、`split_statistics.json` | 内容身份、角色、划分和统计 |
+| `prepro/build_taxosieve_dataset.py` | 唯一数据构建器 |
+| `prepro/protocols/taxosieve_seed/` | 原始内容身份和现役清单顺序的冻结种子 |
+| `run_taxosieve.py`、`taxosieve/` | 主实验入口、D05、校准、测试及严格收据校验 |
+| `taxosafe_support/`、`models/`、`loader/` | 主实验实际使用的 reference 实现 |
+| `tools/run_taxosieve_seeds.py` | 多 seed 与 batch 设置的唯一实现 |
+| `reproducibility/` | 精简的历史回放证据及本轮验证报告 |
 
-`prepro/data/Zooplankton_TT_v9_rebuild`、`Zooplankton_TT_v11_dcbs` 是历史清单快照，仅供溯源及旧工具使用；当前模型不读取它们。签名绑定的归档模型、tokenizer 和来源证明不能因名称相似而删除。
+已删除对比实验实现、旧数据制作工具、v9/v11 配套数据和冗余文件名备份。主方法内用于保持 Known 表现的 reference/D05 比较与 OOF 审计仍属于算法本身，予以保留。
 
-## 2. 数据重建规则
+### 为什么补回的 84 张图没有直接加入默认 TEST
 
-- 分类树保留原 **7 父类、23 已知叶类**的 ID、顺序与 NPY 字节。
-- 已有图像以内容身份继承原划分；改名不导致重新随机划分。新增图像采用固定种子与内容哈希规则，规则写入 `protocol.json`。
-- Known 重复内容采用 TEST → DEV → TRAIN 优先级；训练和校准只保留独立内容，TEST 保留 alias 并由模型按唯一 SHA256 计量。
-- 未知来源的 DEV/TEST 物种角色隔离；既有 Near/OE 保留池继续保留，**不参与梯度训练**。
-- 所有当前图像都必须被清单或审计解释。损坏图片、未知目录、类别冲突和跨角色内容冲突会失败，不静默跳过。
-- 已存在且内容不同的数据输出不能覆盖。数据变化后生成新版本，并更新配置中的数据路径；已完成 run 的哈希或收据不得手工修改。
+当前仓库有 **3,157 个图像文件、3,137 个唯一内容**。相对上一轮实际运行的 3,073 文件库存，补回了历史缺失的 Near TEST 22 张和 Extra TEST 62 张；原有内容没有缺失或修改。若直接加入 TEST，会改变原实验分母。为保持主实验，本版本保留这些图像并生成独立的 `gt_restored_test_intra.txt`、`gt_restored_test_extra.txt`，默认训练、校准、测试均不读取它们。
 
-构建器用法见 [prepro/README.md](prepro/README.md)。仓库已经包含本次生成的清单；正常训练无需重复构建。
+另有三个 OOD 来源在上传时跨 DEV/TEST 放置。按逐图内容身份核对后，`Alima_larva` 恢复到 OOD DEV，`Enteromorphaprolifra` 和 `Fish_larva` 恢复到 OOD TEST；保留用户的新文件名和全部原图字节。
 
-## 3. 环境与运行
+| 默认划分 | 标签行数 | 唯一内容数 |
+|---|---:|---:|
+| Known TRAIN | 1610 | 1610 |
+| Known DEV | 219 | 219 |
+| Known TEST | 451 | 450 |
+| Near DEV | 69 | 69 |
+| Near TEST | 182 | 182 |
+| Extra DEV | 88 | 88 |
+| Extra TEST | 210 | 210 |
+| Near 保留池（未启用） | 98 | 98 |
+| Extra 保留池（未启用） | 127 | 127 |
 
-用户已有服务器环境：Linux，`ProTeCt`，项目目录 `/home/ubuntu/hdd/data/qz/Openset`。保留可用的 torch/torchvision/CUDA 组合；`requirements.txt` 是源码依赖清单，不是升级指令或历史精确锁文件。图像训练与提取需要 CUDA，且首次初始化需要原 CLIP ViT-B/16 预训练权重或可用的下载缓存。
+默认 TEST 仍是 **843 条记录、842 张唯一图像**。主清单不仅保留相同划分和标签，还保留逐行图像内容顺序，避免新文件名排序改变 sampler、D05 折分或训练轨迹。Known 重复内容仍按 TEST > DEV > TRAIN 去重，TEST alias 仍按唯一内容计量。未启用的保留池及补回测试图不参与梯度或阈值拟合。
+
+仓库已生成全部标签，正常运行无需重建。构建器及不可覆盖规则见 [prepro/README.md](prepro/README.md)。
+
+## 运行主实验
+
+保留原 Linux `ProTeCt` 环境（已知可运行组合为 Python 3.8、torch 1.12.1、torchvision 0.13.1、CUDA 构建 11.3）。`requirements.txt` 是依赖范围，不是升级要求。图像训练/提取需要可用 GPU 和原 CLIP ViT-B/16 权重缓存。
+
+**将新分支解压到独立目录，不覆盖已完成或正在运行的旧 suite。** 数据路径和配置身份改变后，应使用新的 run 目录；旧 seed5 的复核继续使用原 suite 的 `runtime/run_taxosieve.py` 和原数据资产。
+
+在新版本项目根目录执行：
 
 ```bash
 conda activate ProTeCt
-cd /home/ubuntu/hdd/data/qz/Openset
 python run_taxosieve.py preflight
-python -u run_taxosieve.py all --run-dir runs/taxosieve/dataset_v1_trial_1 --device cuda --save-scores
+python -u run_taxosieve.py all --run-dir runs/taxosieve/main_clean_trial_1 --device cuda --save-scores
 ```
 
-使用一个**不存在的新 run 目录**。旧 H02 run 属于旧代码与数据协议，不能直接续跑。`preflight --metadata-only` 仅检查元数据，不能替代完整图像检查。
-
-也可以逐阶段执行，不能和上面的 `all` 在同一个目录重复启动：
+根入口仍固定 seed1 配方。`all` 已包含训练、校准、测试；不要再对同一目录重复启动。也可选择以下分步方式：
 
 ```bash
-python -u run_taxosieve.py train --run-dir runs/taxosieve/dataset_v1_trial_1 --device cuda
-python -u run_taxosieve.py calibrate --run-dir runs/taxosieve/dataset_v1_trial_1 --save-scores
-python -u run_taxosieve.py test --run-dir runs/taxosieve/dataset_v1_trial_1 --save-scores
+python -u run_taxosieve.py train --run-dir runs/taxosieve/main_clean_trial_1 --device cuda
+python -u run_taxosieve.py calibrate --run-dir runs/taxosieve/main_clean_trial_1 --save-scores
+python -u run_taxosieve.py test --run-dir runs/taxosieve/main_clean_trial_1 --save-scores
 ```
 
-`--device` 用于 train/all/import-d05；calibrate/test 从 run 读取。`--resume` 只验证并复用已完成阶段，不代表任意优化器断点恢复。首次没有保存完整 scores 的已完成阶段不会因重复命令自动补写它们。
+`--device` 不用于 calibrate/test。`--resume` 只验证并复用已完成阶段，不是任意优化器断点恢复。
 
-## 4. 输出与评价
+多 seed 仍使用独立代码快照，按“全部 TRAIN/DEV → DEV-OOF 冻结选择 → 全部 TEST”顺序执行：
 
-正常输出依次写入 `reference/`、`training/`、`cache/`、`calibration/`、`test/`。`test/completed.json` 含总体及逐已知物种、近域未知物种、域外来源指标；`test/predictions.jsonl` 含逐图终端和计数权重。原始分数是连续证据，不等于概率。
+```bash
+CUDA_VISIBLE_DEVICES=0 python -u run_taxosieve_seeds.py --seeds 2 3 4 5
+CUDA_VISIBLE_DEVICES=0 python -u run_taxosieve_seeds_batch.py --seeds 8 18 28 38 48 --train-batch-size 24
+```
 
-| 类型 | 正确输出 | 门槛 |
-|---|---|---|
-| Known | 正确物种叶节点 | >90% |
-| Near | 正确父节点 | ≥85% |
-| Extra | ROOT / global_unknown | >90% |
-| 全部接纳叶输出 | 正确 Known 叶数 / 全部叶输出数 | >90% |
+两个旧入口均调用同一实现。batch12 为 240 批/轮，batch24 为 120 批/轮，均为每轮抽样 2880 次；优化器更新次数不同，不能把不同 batch 的变化全部归因于 seed。只准备可加 `--prepare-only`。详见 [多 seed 运行说明](docs/taxosieve_seeds.md)。
 
-父类不统一称为“属”。Near 回退到错误父类仍算错；TEST 中同内容 alias 不重复计数。条件 OOF 审计与模型是否通过四项指标是不同结论。
+## 输出、评价及验证边界
 
-历史 H02 在旧 TEST 的 K/N/E/Leaf PPV 为 90.22%/74.02%/60.66%/86.02%，未联合达标。这些是历史结果，**本次未在新数据上训练或报告新性能**。
-
-## 5. 验证与历史功能
+`test/completed.json` 含总体和逐物种/来源结果，`test/predictions.jsonl` 含最终输出和 `evaluation_weight`。Near 正确必须回退到正确父类，ROOT 不算 Near 正确。原四项门槛保持：Known >90%、Near ≥85%、Extra ROOT >90%、叶接收精确率 >90%。本次重构没有声称提升这些指标。
 
 ```bash
 python -m unittest discover -s tests -v
-python run_taxosieve.py --help
 python run_taxosieve.py preflight
 ```
 
-本次验证覆盖真实图像完整性、内容与角色隔离、数据构建异常、来源签名、reference/D05 数值等价性、阶段顺序和旧工具迁移。完整 GPU 训练仍需在用户服务器运行。
+验证覆盖真实图像身份、划分/顺序、来源签名、D05 优化器、分阶段校准、OOF、TEST、缓存与收据防篡改。CPU 和数据验证不能代替目标 GPU 上的全量训练结果；本轮没有重新训练并证明 seed5 指标逐位复现。
 
-`inspect`、`replay` 及来源导入的严格校验代码保留；来源导入要求配置、数据、代码身份全部一致。当前 TaxoSieve 新数据配置与历史 H02/D05 配置不同，因此不能直接使用 `import-d05` 或 `--reference-run-dir` 复用旧数据模型。需要原协议回放时使用归档环境及原配套资产。旧模型不能靠修改收据移植到新数据。`replay` 必须显式提供与分数属于同一 run 的 `--router runs/taxosieve/<run>/calibration/router.json`，不会默认使用历史阈值。历史黄金回放入口为 `tools/verify_taxosieve_replay.py`，输入必须是经过哈希验证的原始黄金文件。其历史下载提交目前不可访问，不能把下载失败当作新模型训练失败，也不能替换成当前数据冒充黄金输入。
+`inspect`、同 run 的 `replay --scores ... --router ...` 保留。历史 `import-d05` 的桥接接口也保留，但已不内置整套旧对比实现：只有显式设置 `H02_ORIGINAL_SOURCE` 指向完整原始快照，且代码、配置、数据和所有收据均通过原有严格校验时才能导入。新数据配置与旧模型不符时仍拒绝导入。默认主实验完全不依赖这个外部归档。
+
+历史数值等价测试可用 `TAXOSIEVE_ORIGINAL_SOURCE` 指定外部原始快照；默认测试明确跳过这些可选归档测试，其余主流程回归继续执行。历史黄金回放说明见 [reproducibility/README.md](reproducibility/README.md)。

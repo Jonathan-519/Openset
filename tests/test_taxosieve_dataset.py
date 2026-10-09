@@ -8,7 +8,7 @@ import unittest
 
 from PIL import Image
 
-from prepro.build_taxosieve_dataset import build, digest, json_bytes, load_seed, new_split
+from prepro.build_taxosieve_dataset import build, digest, json_bytes, load_seed, new_split, SPLITS
 
 
 def picture(number):
@@ -68,6 +68,28 @@ class DatasetTests(unittest.TestCase):
 
     def inventory(self):
         return [json.loads(line) for line in (self.root / "out/inventory.jsonl").read_text().splitlines()]
+
+    def freeze_order(self, restored=None):
+        baseline = self.run_build()
+        inventory = {row["path"]: row for row in self.inventory()}
+        protocol = json.loads((self.root / "out/protocol.json").read_text())
+        order = {"schema_version": "taxosieve_manifest_order_v1", "source_repository_commit": "fixture",
+                 "baseline_inventory_sha256": baseline["inventory_sha256"], "baseline_manifest_sha256": {},
+                 "splits": {}, "restored_test": restored or {"test_intra": [], "test_extra": []},
+                 "relocated_source_roots": []}
+        for split, meta in protocol["manifests"].items():
+            rows = []
+            for line in (self.root / meta["path"]).read_text().splitlines():
+                path, label, _ = line.rsplit(",", 2)
+                row = inventory[Path(meta["root"]).name + "/" + path]
+                rows.append({"sha256": row["sha256"], "label": int(label)})
+            order["splits"][split] = rows
+            order["baseline_manifest_sha256"][split] = meta["sha256"]
+        raw = json_bytes(order)
+        (self.seed_dir / "manifest_order.json").write_bytes(raw)
+        self.seed["manifest_order_sha256"] = digest(raw)
+        (self.seed_dir / "seed.json").write_bytes(json_bytes(self.seed))
+        return order
 
     def test_preserves_assignments_taxonomy_and_is_idempotent(self):
         result = self.run_build()
@@ -228,6 +250,74 @@ class DatasetTests(unittest.TestCase):
         link.symlink_to(self.images / self.rows[0]["path"])
         with self.assertRaisesRegex(ValueError, "Unsupported file"):
             self.run_build()
+
+    def test_flat_dataset_can_share_parent_with_images_and_remains_immutable(self):
+        self.images.rename(self.root / "image")
+        result = build(self.root, "image", ".", "seed", dry_run=True)
+        self.assertEqual(result["statistics"]["inventory_count"], 14)
+        # The seed directory is deliberately outside the managed dataset.
+        data = self.root / "data"
+        data.mkdir()
+        (self.root / "image").rename(data / "image")
+        result = build(self.root, "data/image", "data", "seed")
+        self.assertTrue((data / "gt_train.txt").is_file())
+        self.assertTrue((data / "image").is_dir())
+        self.assertEqual(result, build(self.root, "data/image", "data", "seed"))
+        original = (data / "gt_train.txt").read_bytes()
+        (data / "gt_train.txt").write_bytes(b"tampered\n")
+        with self.assertRaisesRegex(ValueError, "Existing dataset differs"):
+            build(self.root, "data/image", "data", "seed")
+        self.assertNotEqual(original, (data / "gt_train.txt").read_bytes())
+
+    def test_frozen_content_order_survives_filename_sort_reversal(self):
+        order = self.freeze_order()
+        for index, row in enumerate(self.rows):
+            path = self.images / row["path"]
+            path.rename(path.with_name("renamed_%04d.png" % (len(self.rows) - index)))
+        result = build(self.root, "images", "renamed", "seed")
+        new_rows = [json.loads(line) for line in (self.root / "renamed/inventory.jsonl").read_text().splitlines()]
+        for split in SPLITS:
+            actual = sorted((r for r in new_rows if r["assigned_split"] == split and r["disposition"] == "selected"),
+                            key=lambda row: row["manifest_index"])
+            self.assertEqual([{"sha256": r["sha256"], "label": r["label"]} for r in actual], order["splits"][split])
+        self.assertTrue(result["reconciliation"]["main_experiment_preserved"]["content_labels_and_row_order_unchanged"])
+
+    def test_missing_frozen_identity_fails_instead_of_shrinking_main_test(self):
+        self.freeze_order()
+        (self.images / self.rows[4]["path"]).unlink()
+        with self.assertRaisesRegex(ValueError, "Missing frozen main-experiment identity"):
+            build(self.root, "images", "missing", "seed")
+        self.assertFalse((self.root / "missing").exists())
+
+    def test_restored_historical_test_is_separate_and_inactive(self):
+        data = picture(987)
+        path = self.add_baseline("NearTest", "test_intra", "restored.png", data)
+        (self.images / path).unlink()
+        self.save_seed()
+        self.freeze_order({"test_intra": [digest(data)], "test_extra": []})
+        (self.images / path).write_bytes(data)
+        result = build(self.root, "images", "restored", "seed")
+        self.assertEqual(result["statistics"]["selected_counts"]["test_intra"], 2)
+        self.assertEqual(result["statistics"]["inactive_restored_test_count"], 1)
+        self.assertTrue(result["statistics"]["all_images_accounted_for"])
+        protocol = json.loads((self.root / "restored/protocol.json").read_text())
+        meta = protocol["restored_test_manifests"]["test_intra"]
+        self.assertFalse(meta["active"])
+        self.assertFalse(meta["gradient_training"])
+        self.assertEqual(meta["count"], 1)
+        self.assertIn("restored.png", (self.root / meta["path"]).read_text())
+
+    def test_unapproved_addition_cannot_expand_frozen_main_split(self):
+        self.freeze_order()
+        (self.images / "NearTest/Parent/TestUnknown/new.png").write_bytes(picture(888))
+        with self.assertRaisesRegex(ValueError, "Inventory differs from frozen experiment"):
+            build(self.root, "images", "expanded", "seed")
+
+    def test_frozen_manifest_order_tamper_is_rejected(self):
+        self.freeze_order()
+        (self.seed_dir / "manifest_order.json").write_bytes(b"{}")
+        with self.assertRaisesRegex(ValueError, "Frozen manifest order hash"):
+            build(self.root, "images", "tampered", "seed")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+test_reference_matches_archived_execution_bitwise (test_taxosieve_reference.ReferenceEquivalenceTest.test_reference_matches_archived_execution_bitwise) ... ok
+test_snapshot_loading_supports_old_and_new_torch_signatures (test_taxosieve_reference.ReferenceEquivalenceTest.test_snapshot_loading_supports_old_and_new_torch_signatures) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 11.693s
+
+OK
+EXACT_COMPARISON_COUNTS {"arrays": 1, "scalars": 1386, "snapshot_groups": 17, "tensors": 642}

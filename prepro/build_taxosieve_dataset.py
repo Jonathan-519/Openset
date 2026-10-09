@@ -2,9 +2,11 @@
 """Reconcile the current image inventory into an immutable TaxoSieve dataset.
 
 This is dataset preparation, never model fitting: image decoding checks file
-integrity only. Existing identities retain their original roles. New identities
-use content-hash splits; deleted identities are explicitly recorded. Unknown
-development reserves are inactive and must never supply training gradients.
+integrity only. Frozen manifests preserve existing image identities, labels and
+row order, and reject missing or unapproved new identities. Audited, restored
+historical TEST identities stay in separate inactive lists. Only seeds without
+a frozen order use content-hash splits for new identities. Unknown development
+reserves must never supply training gradients.
 """
 import argparse
 from collections import Counter, defaultdict
@@ -21,12 +23,12 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SEED = "prepro/protocols/taxosieve_seed"
-DEFAULT_IMAGES = "prepro/data/images"
-DEFAULT_OUTPUT = "prepro/data/taxosieve_v1"
+DEFAULT_IMAGES = "prepro/data/image"
+DEFAULT_OUTPUT = "prepro/data"
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
 SPLITS = ("train", "val_known", "test_known", "val_intra", "test_intra",
           "val_extra", "test_extra", "reserved_near", "reserved_extra")
-FILENAMES = {s: "gt_" + ("train_known" if s == "train" else s) + ".txt" for s in SPLITS}
+FILENAMES = {s: "gt_" + s + ".txt" for s in SPLITS}
 ROOT_ROLES = {"train": "known", "val_known": "known", "test_known": "known",
               "val_intra": "near_dev", "reserved_near": "near_dev", "test_intra": "near_test",
               "val_extra": "extra_dev", "reserved_extra": "extra_dev", "test_extra": "extra_test"}
@@ -285,21 +287,84 @@ def reconcile(seed, current):
     return selected, report
 
 
+def preserve_manifest_order(seed_dir, seed, selected, report):
+    """Keep the established main experiment's identities AND row order.
+
+    Renaming files must not change a seeded sampler's index-to-image mapping.
+    Historical TEST files restored after the previous dataset was frozen stay
+    in separately documented, inactive manifests; they cannot enlarge TEST.
+    """
+    expected = seed.get("manifest_order_sha256")
+    if expected is None:
+        return {}, None
+    raw = (seed_dir / "manifest_order.json").read_bytes()
+    if digest(raw) != expected:
+        raise ValueError("Frozen manifest order hash differs")
+    order = json.loads(raw)
+    if order.get("schema_version") != "taxosieve_manifest_order_v1" or set(order["splits"]) != set(SPLITS):
+        raise ValueError("Unsupported or incomplete frozen manifest order")
+    if set(order["restored_test"]) != {"test_intra", "test_extra"}:
+        raise ValueError("Restored identities must be inactive historical TEST")
+    restored = {}
+    content_hashes = {}
+    for split in SPLITS:
+        candidates = defaultdict(list)
+        for row in selected[split]:
+            candidates[(row["sha256"], row["label"])].append(row)
+        retained = []
+        for identity in order["splits"][split]:
+            key = (identity["sha256"], identity["label"])
+            if not candidates[key]:
+                raise ValueError("Missing frozen main-experiment identity in " + split + ": " + key[0])
+            row = candidates[key].pop(0)
+            row["manifest_index"] = len(retained)
+            retained.append(row)
+        extra = sorted((row for rows in candidates.values() for row in rows), key=lambda row: (row["sha256"], row["path"]))
+        permitted = Counter(order["restored_test"].get(split, []))
+        actual = Counter(row["sha256"] for row in extra)
+        if actual != permitted or any(row["assignment"] != "historical_identity" for row in extra):
+            raise ValueError("Inventory differs from frozen experiment/restored TEST; create an explicit new protocol: " + split)
+        for row in extra:
+            row["disposition"] = "inactive_restored_test"
+        if split in order["restored_test"]:
+            restored[split] = extra
+        selected[split] = retained
+        content_hashes[split] = digest(json_bytes(order["splits"][split]))
+    report["main_experiment_preserved"] = {
+        "baseline_repository_commit": order["source_repository_commit"],
+        "baseline_inventory_sha256": order["baseline_inventory_sha256"],
+        "baseline_manifest_sha256": order["baseline_manifest_sha256"],
+        "content_labels_and_row_order_unchanged": True,
+        "ordered_content_sha256": content_hashes,
+        "restored_test_active": False,
+        "restored_test_counts": {split: len(rows) for split, rows in restored.items()},
+        "relocated_source_roots": order["relocated_source_roots"],
+    }
+    return restored, expected
+
+
 def build(project_root=ROOT, image_root=DEFAULT_IMAGES, output=DEFAULT_OUTPUT,
           seed_dir=DEFAULT_SEED, dry_run=False, dataset_version=None):
     root = Path(project_root).resolve()
     image_root, output, seed_dir = (locate(root, value) for value in (image_root, output, seed_dir))
-    if output == image_root or image_root in output.parents or output in image_root.parents:
-        raise ValueError("Output and image root must be separate directories")
+    if output == image_root or image_root in output.parents:
+        raise ValueError("Output must not be the image root or a directory inside it")
+    if output in image_root.parents and image_root.parent != output:
+        raise ValueError("Images nested in the dataset must be its direct child directory")
     seed, taxonomy, seed_hash = load_seed(seed_dir)
     current = scan_images(image_root, seed)
     selected, reconciliation = reconcile(seed, current)
+    restored, order_hash = preserve_manifest_order(seed_dir, seed, selected, reconciliation)
     image_path, output_path = image_root.relative_to(root).as_posix(), output.relative_to(root).as_posix()
     roots = {role: image_path + "/" + name for role, name in seed["roots"].items()}
     files = dict(taxonomy)
+    def manifest(rows):
+        lines = ["{},{},{}".format(row["path"].split("/", 1)[1], row["label"], index) for index, row in enumerate(rows)]
+        return (("\n".join(lines) + "\n") if lines else "").encode("utf-8")
     for split in SPLITS:
-        lines = ["{},{},{}".format(row["path"].split("/", 1)[1], row["label"], index) for index, row in enumerate(selected[split])]
-        files[FILENAMES[split]] = (("\n".join(lines) + "\n") if lines else "").encode("utf-8")
+        files[FILENAMES[split]] = manifest(selected[split])
+    for split, rows in restored.items():
+        files["gt_restored_" + split + ".txt"] = manifest(rows)
     files["gt_train_reference.txt"] = files[FILENAMES["train"]]
     count = {split: len(rows) for split, rows in selected.items()}
     unique = {split: len({row["sha256"] for row in rows}) for split, rows in selected.items()}
@@ -307,33 +372,45 @@ def build(project_root=ROOT, image_root=DEFAULT_IMAGES, output=DEFAULT_OUTPUT,
     for row in current:
         key = row["root"] + "/" + row["class"]
         entry = per_source.setdefault(key, {"label": row["label"], "role": row["role"], "inventory_count": 0,
-                                             "selected": {s: 0 for s in SPLITS}, "excluded_exact_duplicates": 0})
+                                             "selected": {s: 0 for s in SPLITS}, "excluded_exact_duplicates": 0,
+                                             "inactive_restored_test": 0})
         entry["inventory_count"] += 1
         if row["disposition"] == "selected":
             entry["selected"][row["assigned_split"]] += 1
+        elif row["disposition"] == "inactive_restored_test":
+            entry["inactive_restored_test"] += 1
         else:
             entry["excluded_exact_duplicates"] += 1
     inventory = b"".join((json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8") for row in current)
     inventory_hash = digest(inventory)
-    protocol = {"protocol_version": dataset_version or output.name, "experiment": "TaxoSieve",
+    protocol = {"protocol_version": dataset_version or "taxosieve_v1_renamed", "experiment": "TaxoSieve",
                 "schema_version": "taxosieve_dataset_v1", "seed_sha256": seed_hash,
                 "historical_source_commit": seed["baseline_source_commit"], "inventory_sha256": inventory_hash,
                 "new_dataset_after_inventory_change": True, "roots": roots, "output": output_path,
                 "known_identity_policy": "preserve historical assignments; SHA256 priority TEST > VAL > TRAIN; keep TEST aliases",
-                "new_known_split": {"train": .7, "val_known": .1, "test_known": .2},
-                "new_dev_unknown_split": {"calibration": .4, "inactive_reserve": .6},
-                "content_hash_seed": "taxosieve-v1:2026", "split_policy": "hash probabilities for new identities, no forced reshuffle",
+                "new_known_split": None if order_hash else {"train": .7, "val_known": .1, "test_known": .2},
+                "new_dev_unknown_split": None if order_hash else {"calibration": .4, "inactive_reserve": .6},
+                "content_hash_seed": None if order_hash else "taxosieve-v1:2026",
+                "split_policy": ("frozen main-experiment identities, labels and row order; reject missing/new identities; audited restored TEST inactive"
+                                 if order_hash else "hash probabilities for new identities, no forced reshuffle"),
                 "unknown_gradient_training": False, "unknown_reserves_active": False,
                 "unknown_test_sources_disjoint_from_dev": True, "image_decode_scope": "integrity audit only; no model features or fitting",
                 "test_alias_policy": "all assigned TEST rows retained, unique counts reported separately",
                 "taxonomy_sha256": seed["taxonomy_sha256"],
+                "manifest_order_sha256": order_hash,
+                "restored_test_manifests": {split: {"path": output_path + "/gt_restored_" + split + ".txt",
+                                                    "root": roots[ROOT_ROLES[split]], "count": len(rows),
+                                                    "sha256": digest(files["gt_restored_" + split + ".txt"]),
+                                                    "active": False, "gradient_training": False}
+                                             for split, rows in restored.items()},
                 "manifests": {split: {"path": output_path + "/" + FILENAMES[split], "root": roots[ROOT_ROLES[split]],
                                         "sha256": digest(files[FILENAMES[split]]), "count": count[split], "unique_count": unique[split],
                                         "gradient_training": split == "train", "active": not split.startswith("reserved_")} for split in SPLITS}}
     statistics = {"schema_version": "taxosieve_statistics_v1", "inventory_count": len(current),
                   "inventory_unique_sha256": len({row["sha256"] for row in current}), "selected_counts": count,
                   "selected_unique_counts": unique, "excluded_exact_duplicate_count": len(reconciliation["excluded_exact_duplicates"]),
-                  "all_images_accounted_for": sum(count.values()) + len(reconciliation["excluded_exact_duplicates"]) == len(current),
+                  "inactive_restored_test_count": sum(len(rows) for rows in restored.values()),
+                  "all_images_accounted_for": sum(count.values()) + len(reconciliation["excluded_exact_duplicates"]) + sum(len(rows) for rows in restored.values()) == len(current),
                   "known_species_without_independent_validation": sorted(set(seed["classes"][seed["roots"]["known"]]) - {row["class"] for row in selected["val_known"]}),
                   "per_source": per_source}
     dedup = {"schema_version": "taxosieve_known_identity_v1", "operation": "image_identity_only",
@@ -356,16 +433,24 @@ def build(project_root=ROOT, image_root=DEFAULT_IMAGES, output=DEFAULT_OUTPUT,
         if output.exists():
             if not output.is_dir() or any(p.is_symlink() for p in output.iterdir()):
                 raise ValueError("Output must be a plain dataset directory")
-            actual = {p.name for p in output.iterdir()}
-            if actual != set(files) or any((output / name).read_bytes() != data for name, data in files.items()):
+            actual = {p.name for p in output.iterdir() if p != image_root}
+            if actual and (actual != set(files) or any((output / name).read_bytes() != data for name, data in files.items())):
                 raise ValueError("Existing dataset differs; choose a NEW --output directory/version: " + str(output))
         else:
+            actual = set()
+        if not actual:
             output.parent.mkdir(parents=True, exist_ok=True)
             temporary = Path(tempfile.mkdtemp(prefix=".taxosieve-build-", dir=str(output.parent)))
             try:
                 for name, data in files.items():
                     (temporary / name).write_bytes(data)
-                temporary.rename(output)
+                if output.exists():
+                    # Images already live in output/image. Validate every
+                    # generated byte before installing only the new files.
+                    for name in files:
+                        (temporary / name).rename(output / name)
+                else:
+                    temporary.rename(output)
             finally:
                 if temporary.exists():
                     shutil.rmtree(temporary)

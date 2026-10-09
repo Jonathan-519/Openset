@@ -5,8 +5,9 @@ Run from the repository root with:
 
 Each implementation runs in a fresh interpreter, using the same small archived
 fixtures. No user images or pretrained weights are opened, and all checkpoint
-snapshots are temporary. The default original is comparison_experiments/legacy;
-TAXOSIEVE_ORIGINAL_SOURCE (or legacy H02_ORIGINAL_SOURCE) may point to another intact reviewed source snapshot.
+snapshots are temporary. Set TAXOSIEVE_ORIGINAL_SOURCE (or H02_ORIGINAL_SOURCE)
+to an external, intact reviewed source snapshot to enable the optional archived
+comparison. Both workers read the current dataset's identical taxonomy input.
 """
 import argparse
 from contextlib import ExitStack, redirect_stdout
@@ -162,16 +163,16 @@ def _snapshot_worker(args):
         snapshot['tiny_test_metrics'] = json.loads((directory/'test/metrics.json').read_text())
         snapshot['tiny_test_predictions'] = (directory/'test/predictions.jsonl').read_text()
 
-    # Real locked taxonomy loading, with display-only termcolor shim in the old
+    # Real current taxonomy loading, with display-only termcolor shim in the old
     # source solely because it is absent in this executor's Python installation.
     if args.repo == args.original:
         term = types.ModuleType('termcolor')
         term.colored = lambda value,*a,**k: str(value)
         sys.modules.setdefault('termcolor',term)
     from loader.hierdata import _load_hierarchy
-    taxonomy_path=args.original/'prepro/data/Zooplankton_TT_v9_rebuild/tree.npy'
+    taxonomy_path = args.taxonomy
     if not taxonomy_path.exists():
-        raise FileNotFoundError('The archived reference taxonomy is required: ' + str(taxonomy_path))
+        raise FileNotFoundError('The current reference taxonomy is required: ' + str(taxonomy_path))
     hierarchy=_load_hierarchy({'hierarchy':str(taxonomy_path)})
     snapshot['taxonomy']={key:cloned(value) for key,value in hierarchy.items()}
     from models.clip import tokenize
@@ -210,8 +211,10 @@ class ReferenceEquivalenceTest(unittest.TestCase):
         import numpy as np
         import torch
 
-        original = Path(os.environ.get("TAXOSIEVE_ORIGINAL_SOURCE", os.environ.get("H02_ORIGINAL_SOURCE",
-            str(ROOT / "comparison_experiments" / "legacy")))).resolve()
+        source = os.environ.get("TAXOSIEVE_ORIGINAL_SOURCE") or os.environ.get("H02_ORIGINAL_SOURCE")
+        if not source:
+            self.skipTest("Set TAXOSIEVE_ORIGINAL_SOURCE to an external reviewed snapshot for exact comparison")
+        original = Path(source).expanduser().resolve()
         self.assertTrue((original / "tests" / "test_taxosafe_support_core.py").is_file(),
                         "An intact archived reference and its fixtures are required")
         counts = {"tensors": 0, "arrays": 0, "scalars": 0}
@@ -249,7 +252,8 @@ class ReferenceEquivalenceTest(unittest.TestCase):
                 process = subprocess.run([
                     sys.executable, str(Path(__file__).resolve()), "--worker",
                     "--repo", str(repo), "--original", str(original),
-                    "--output", str(output)], cwd=str(repo), capture_output=True,
+                    "--output", str(output), "--taxonomy", str(ROOT / "prepro/data/tree.npy")],
+                    cwd=str(repo), capture_output=True,
                     text=True, timeout=60)
                 self.assertEqual(process.returncode, 0,
                     name + " worker failed:\n" + process.stdout + process.stderr)
@@ -271,6 +275,7 @@ if __name__ == "__main__":
         parser.add_argument("--repo", type=Path, required=True)
         parser.add_argument("--original", type=Path, required=True)
         parser.add_argument("--output", type=Path, required=True)
+        parser.add_argument("--taxonomy", type=Path, required=True)
         _snapshot_worker(parser.parse_args())
     else:
         unittest.main()

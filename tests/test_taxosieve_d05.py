@@ -1,7 +1,8 @@
 """D05 extraction checks, including exact comparisons with archived source.
 
-The default golden source is comparison_experiments/legacy. Set
-TAXOSIEVE_ORIGINAL_SOURCE to another intact snapshot when auditing a release.
+Set TAXOSIEVE_ORIGINAL_SOURCE (or H02_ORIGINAL_SOURCE) to an external intact
+snapshot to enable the optional archived comparison when auditing a release.
+The self-contained D05 mathematical and lifecycle checks always run.
 No images, historical result directories, or trained user weights are needed.
 """
 import ast
@@ -80,12 +81,14 @@ def _fixture():
 
 
 def _load_original():
-    default = Path(__file__).resolve().parents[1] / "comparison_experiments" / "legacy"
-    original = Path(os.environ.get("TAXOSIEVE_ORIGINAL_SOURCE", os.environ.get("H02_ORIGINAL_SOURCE", str(default))))
+    source = os.environ.get("TAXOSIEVE_ORIGINAL_SOURCE") or os.environ.get("H02_ORIGINAL_SOURCE")
+    if not source:
+        return None
+    original = Path(source).expanduser().resolve()
     required = [original / "taxosafe_discovery" / name
                 for name in ("geometry.py", "verifier.py", "backend.py")]
     if not all(path.is_file() for path in required):
-        return None
+        raise FileNotFoundError("Configured archived snapshot is incomplete: " + str(original))
     if str(original) not in sys.path:
         sys.path.append(str(original))
     package_name = "_h02_d05_original_snapshot"

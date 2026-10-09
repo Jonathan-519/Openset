@@ -1,0 +1,125 @@
+{
+  "version": "TaxoSieve_v1",
+  "python": "3.12.14",
+  "torch": "2.5.1+cpu",
+  "cuda_available": false,
+  "torch_cuda": null,
+  "reference_signature": {
+    "config": "0c12b4bcada4aa130b0a63ad64fa723129d617187a19815c7d079857c46695db",
+    "hierarchy": "f7a49bea63f098492019bb6fd4113922aff047012e34b603bbf8eae3f69fe372",
+    "code": "e6bd1cfeadece766a1b9a8dd6a3716f9ac9dbffe71192053208c93d5d058458d",
+    "support_code": "77a7bb33ed02e565f14c96d3f01ee9eacb103d79109e952f7e05391b22aa7a2c",
+    "method": "support_reference_v3",
+    "known_preparation_audit": "4a9847142e1014f49147862ab41d09f611198020ee3716694760905025a62796"
+  },
+  "meta": {
+    "parent_names": [
+      "Amphipoda",
+      "Appendiculata",
+      "Cladocera",
+      "Copepoda",
+      "Euphausiacea",
+      "Medusae",
+      "Sagittoidea"
+    ],
+    "leaf_names": [
+      "Themisto gracilipes",
+      "Oikopleura",
+      "Evadne tergestina",
+      "Penilia avirostris",
+      "Acartia hongi",
+      "Calanopia thompsoni",
+      "Calanus sinicus",
+      "Centropages dorsispinatus",
+      "Eurytemora pacifica",
+      "Oithona similis",
+      "Paracalanus parvus",
+      "Pontellopsis tenuicauda",
+      "Pseudodiaptomus marinus",
+      "Euphausia pacifica",
+      "Aurelia aurita",
+      "Bougainvillia muscus",
+      "Clytia folleata",
+      "Dipurena ophiogaeter",
+      "Eirene",
+      "Muggiaea atlantica",
+      "Obelia dichotoma",
+      "Proboscidactyla flavicirrata",
+      "Sagitta"
+    ],
+    "leaf_to_parent": [
+      0,
+      1,
+      2,
+      2,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      4,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      6
+    ]
+  },
+  "manifests": {
+    "test_extra": {
+      "path": "prepro/data/gt_test_extra.txt",
+      "sha256": "5d47a92a7eeefe1760dbaad268c11029367d016475ae86ba9a353024fd841e97",
+      "record_count": 210
+    },
+    "test_intra": {
+      "path": "prepro/data/gt_test_intra.txt",
+      "sha256": "e7e7cea9e9aae3085e94bc68a258fa11d96d493536a15f33b39a6080fc0ac24e",
+      "record_count": 182
+    },
+    "test_known": {
+      "path": "prepro/data/gt_test_known.txt",
+      "sha256": "7c32acecc644d7191d5ee6bb4947767f55ca2dbdd9184d7758e013f4c122416b",
+      "record_count": 451
+    },
+    "train": {
+      "path": "prepro/data/gt_train.txt",
+      "sha256": "fe38f5549c601ddcd204945306aa0adebb5aa72619054785e5ef2f9980563e79",
+      "record_count": 1610
+    },
+    "val_extra": {
+      "path": "prepro/data/gt_val_extra.txt",
+      "sha256": "728f7d8d4f9c3fd2d5071d183216059f2e51b734182834d0a07e30abaffbca3f",
+      "record_count": 88
+    },
+    "val_intra": {
+      "path": "prepro/data/gt_val_intra.txt",
+      "sha256": "fd7fd2e91c8d5f72cfc2d5c0666293c8b07484cbb8c111a58d6b05fa8a1e35e8",
+      "record_count": 69
+    },
+    "val_known": {
+      "path": "prepro/data/gt_val_known.txt",
+      "sha256": "cd409a6602e118f84e634f3f478692d29c0acb7a1423a04b41c8f3633668d12a",
+      "record_count": 219
+    }
+  },
+  "image_bytes_checked": true,
+  "model_forward_performed": false,
+  "checkpoints_present_in_git": false,
+  "unique_images": {
+    "train": 1610,
+    "val_known": 219,
+    "val_intra": 69,
+    "val_extra": 88,
+    "test_known": 450,
+    "test_intra": 182,
+    "test_extra": 210
+  }
+}

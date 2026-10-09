@@ -222,7 +222,7 @@ def train(directory, reference_directory=None, device="cuda", config=p.DEFAULT_C
 
 
 def _historical_export(discovery_directory, output, stage="train", frozen=None):
-    command = [sys.executable, str(p.PROJECT_ROOT / "comparison_experiments/_export_d05.py"),
+    command = [sys.executable, str(p.PROJECT_ROOT / "tools/export_taxosieve_d05.py"),
                "--source", str(Path(discovery_directory).resolve()), "--output", str(output), "--stage", stage]
     if frozen is not None:
         command.extend(("--frozen-development", str(frozen)))

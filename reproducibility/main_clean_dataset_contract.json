@@ -1,0 +1,92 @@
+{
+  "source_commit": "638853b47b0e7b8d2d7fe2ad387e030b255512c8",
+  "all_3157_images_fully_decoded": true,
+  "original_3157_seed_blob_size_multiset_identical": true,
+  "image_bytes_and_current_filenames_preserved": true,
+  "inventory_count": 3157,
+  "unique_contents": 3137,
+  "current_main_baseline_inventory_count": 3073,
+  "missing_main_baseline_images": 0,
+  "restored_historical_test_images": 84,
+  "restored_test_by_split": {
+    "test_intra": 22,
+    "test_extra": 62
+  },
+  "restored_test_disjoint_from_main_manifests": true,
+  "all_main_split_order_checks": {
+    "reserved_extra": {
+      "rows": 127,
+      "unique_contents": 127,
+      "sha256_labels_and_indices_identical": true
+    },
+    "reserved_near": {
+      "rows": 98,
+      "unique_contents": 98,
+      "sha256_labels_and_indices_identical": true
+    },
+    "test_extra": {
+      "rows": 210,
+      "unique_contents": 210,
+      "sha256_labels_and_indices_identical": true
+    },
+    "test_intra": {
+      "rows": 182,
+      "unique_contents": 182,
+      "sha256_labels_and_indices_identical": true
+    },
+    "test_known": {
+      "rows": 451,
+      "unique_contents": 450,
+      "sha256_labels_and_indices_identical": true
+    },
+    "train": {
+      "rows": 1610,
+      "unique_contents": 1610,
+      "sha256_labels_and_indices_identical": true
+    },
+    "val_extra": {
+      "rows": 88,
+      "unique_contents": 88,
+      "sha256_labels_and_indices_identical": true
+    },
+    "val_intra": {
+      "rows": 69,
+      "unique_contents": 69,
+      "sha256_labels_and_indices_identical": true
+    },
+    "val_known": {
+      "rows": 219,
+      "unique_contents": 219,
+      "sha256_labels_and_indices_identical": true
+    }
+  },
+  "taxonomy_bytes_identical": true,
+  "corrected_source_root_relocations": [
+    {
+      "content_sha256": "92817491d94bcddbb9344b0bb3729b95b78e6826cd1482f4b4e7c62ab9953418",
+      "count": 39,
+      "from_root": "Zooplankton_OOD_Test",
+      "reason": "restore frozen DEV/TEST source role; preserve image bytes and current filenames",
+      "source": "Alima_larva",
+      "to_root": "Zooplankton_OOD_Dev"
+    },
+    {
+      "content_sha256": "609adf80793c03c1d062fc4d659a3037486e68f33ec388362f2292348fd9c844",
+      "count": 17,
+      "from_root": "Zooplankton_OOD_Dev",
+      "reason": "restore frozen DEV/TEST source role; preserve image bytes and current filenames",
+      "source": "Enteromorphaprolifra",
+      "to_root": "Zooplankton_OOD_Test"
+    },
+    {
+      "content_sha256": "97043e60edd792349cc76099abd3569ccb2755c152ab64639d3d6cb8b4e4c5fe",
+      "count": 41,
+      "from_root": "Zooplankton_OOD_Dev",
+      "reason": "restore frozen DEV/TEST source role; preserve image bytes and current filenames",
+      "source": "Fish_larva",
+      "to_root": "Zooplankton_OOD_Test"
+    }
+  ],
+  "dataset_manifest_sha256": "bd8f71a753f62f25e98551add230c8a123efb906d37d246708c2c1a1c0309dff",
+  "dataset_tests_passed": 20
+}

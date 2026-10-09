@@ -1,0 +1,161 @@
+{
+  "schema_version": "taxosieve_main_clean_validation_v1",
+  "baseline_commit": "638853b47b0e7b8d2d7fe2ad387e030b255512c8",
+  "branch": "taxosieve-main-clean-20261009",
+  "runtime": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cpu",
+    "cuda_available": false
+  },
+  "main_algorithm_changed": false,
+  "main_recipe_changed_except_data_paths": false,
+  "main_split_content_labels_and_row_order_preserved": true,
+  "current_inventory_files": 3157,
+  "current_unique_image_contents": 3137,
+  "default_test_rows": 843,
+  "default_test_unique_images": 842,
+  "restored_test_images": {
+    "test_intra": 22,
+    "test_extra": 62,
+    "active": false
+  },
+  "all_current_image_bytes_and_filenames_preserved": true,
+  "relocated_ood_sources": [
+    {
+      "content_sha256": "92817491d94bcddbb9344b0bb3729b95b78e6826cd1482f4b4e7c62ab9953418",
+      "count": 39,
+      "from_root": "Zooplankton_OOD_Test",
+      "reason": "restore frozen DEV/TEST source role; preserve image bytes and current filenames",
+      "source": "Alima_larva",
+      "to_root": "Zooplankton_OOD_Dev"
+    },
+    {
+      "content_sha256": "609adf80793c03c1d062fc4d659a3037486e68f33ec388362f2292348fd9c844",
+      "count": 17,
+      "from_root": "Zooplankton_OOD_Dev",
+      "reason": "restore frozen DEV/TEST source role; preserve image bytes and current filenames",
+      "source": "Enteromorphaprolifra",
+      "to_root": "Zooplankton_OOD_Test"
+    },
+    {
+      "content_sha256": "97043e60edd792349cc76099abd3569ccb2755c152ab64639d3d6cb8b4e4c5fe",
+      "count": 41,
+      "from_root": "Zooplankton_OOD_Dev",
+      "reason": "restore frozen DEV/TEST source role; preserve image bytes and current filenames",
+      "source": "Fish_larva",
+      "to_root": "Zooplankton_OOD_Test"
+    }
+  ],
+  "verification": {
+    "full_image_decode": true,
+    "all_main_split_order_checks": {
+      "reserved_extra": {
+        "rows": 127,
+        "unique_contents": 127,
+        "sha256_labels_and_indices_identical": true
+      },
+      "reserved_near": {
+        "rows": 98,
+        "unique_contents": 98,
+        "sha256_labels_and_indices_identical": true
+      },
+      "test_extra": {
+        "rows": 210,
+        "unique_contents": 210,
+        "sha256_labels_and_indices_identical": true
+      },
+      "test_intra": {
+        "rows": 182,
+        "unique_contents": 182,
+        "sha256_labels_and_indices_identical": true
+      },
+      "test_known": {
+        "rows": 451,
+        "unique_contents": 450,
+        "sha256_labels_and_indices_identical": true
+      },
+      "train": {
+        "rows": 1610,
+        "unique_contents": 1610,
+        "sha256_labels_and_indices_identical": true
+      },
+      "val_extra": {
+        "rows": 88,
+        "unique_contents": 88,
+        "sha256_labels_and_indices_identical": true
+      },
+      "val_intra": {
+        "rows": 69,
+        "unique_contents": 69,
+        "sha256_labels_and_indices_identical": true
+      },
+      "val_known": {
+        "rows": 219,
+        "unique_contents": 219,
+        "sha256_labels_and_indices_identical": true
+      }
+    },
+    "default_unittest": {
+      "tests_run": 80,
+      "result": "OK",
+      "optional_external_archive_skips": 2
+    },
+    "unittest_with_explicit_original_archive": {
+      "tests_run": 83,
+      "result": "OK",
+      "skips": 0
+    },
+    "reference_equivalence": {
+      "snapshots": 17,
+      "tensors": 642,
+      "arrays": 1,
+      "scalars_and_strings": 1386,
+      "all_equal": true
+    },
+    "python38_syntax": {
+      "files": 56,
+      "passed": true
+    },
+    "real_data_preflight_unique_images": {
+      "train": 1610,
+      "val_known": 219,
+      "val_intra": 69,
+      "val_extra": 88,
+      "test_known": 450,
+      "test_intra": 182,
+      "test_extra": 210
+    },
+    "sampler_and_d05_and_oof_contract": "main_clean_core_contract.json",
+    "multi_seed": {
+      "helper_tests": 14,
+      "real_data_prepare_only_batches": [
+        12,
+        24
+      ],
+      "snapshot_seed3_lifecycle_tests": 15
+    },
+    "historical_import_missing_archive_fails_without_output": true
+  },
+  "historical_import": {
+    "embedded_comparison_implementation_removed": true,
+    "external_source_env": "H02_ORIGINAL_SOURCE",
+    "original_signature_checks_preserved": true
+  },
+  "full_gpu_training_performed": false,
+  "seed5_gpu_accuracy_reproduced": false,
+  "new_accuracy_results_available": false,
+  "reference_code_digests": {
+    "code": "e6bd1cfeadece766a1b9a8dd6a3716f9ac9dbffe71192053208c93d5d058458d",
+    "support_code": "77a7bb33ed02e565f14c96d3f01ee9eacb103d79109e952f7e05391b22aa7a2c",
+    "method": "support_reference_v3"
+  },
+  "scope_note": "CPU regression and exact code/data/order contracts; does not assert full GPU training or identical GPU performance.",
+  "evidence_sha256": {
+    "main_clean_core_contract.json": "0e7ff7be51b709f002a95120d7cbc53e5a692e35a453b7dcecfa081566942ab9",
+    "main_clean_dataset_contract.json": "2273e2c369c8416b6c651bb19881c52a07d125ac90c488864c6cea51f8621747",
+    "main_clean_preflight.json": "a4fbd1487934dfb002999d77166e7abf3c707d8550ae93b4048d72aac535d38e",
+    "main_clean_reference_equivalence.log": "008a1d0df3915e12a81e7f8be64df43694bec38dd16a983f24a43f030a59b382",
+    "main_clean_tests.log": "edd635d4fcaef170d6e7e4f7f776d6a1275669823dac620fe3b75d079d678e5d"
+  },
+  "test_log_normalization": "Trailing whitespace removed from checked-in log only; test outcomes unchanged."
+}

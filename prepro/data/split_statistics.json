@@ -1,0 +1,791 @@
+{
+  "all_images_accounted_for": true,
+  "excluded_exact_duplicate_count": 19,
+  "inactive_restored_test_count": 84,
+  "inventory_count": 3157,
+  "inventory_unique_sha256": 3137,
+  "known_species_without_independent_validation": [
+    "Copepoda/Calanopia_thompsoni"
+  ],
+  "per_source": {
+    "Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 68,
+      "label": 3,
+      "role": "near_dev",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 40,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 28,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Dev/Copepoda/Centropages_tenuiremis": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 74,
+      "label": 3,
+      "role": "near_dev",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 44,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 30,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Dev/Medusae/Sugiura_chengshanense": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 8,
+      "label": 5,
+      "role": "near_dev",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 4,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 4,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Dev/Medusae/Zanclea_costata": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 17,
+      "label": 5,
+      "role": "near_dev",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 10,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 7,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Test/Copepoda/Corycaeus_affinis": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 2,
+      "inventory_count": 19,
+      "label": 3,
+      "role": "near_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 17,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Test/Copepoda/Oithona_plumifera": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 7,
+      "inventory_count": 32,
+      "label": 3,
+      "role": "near_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 25,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Test/Copepoda/Tortanus_derjugini": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 3,
+      "inventory_count": 30,
+      "label": 3,
+      "role": "near_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 27,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Test/Medusae/Gonionemus_vertens": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 2,
+      "inventory_count": 9,
+      "label": 5,
+      "role": "near_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 7,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_NearUnknown_Test/Medusae/Turritopsis_nutricula": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 8,
+      "inventory_count": 114,
+      "label": 5,
+      "role": "near_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 106,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Dev/Alima_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 39,
+      "label": -1,
+      "role": "extra_dev",
+      "selected": {
+        "reserved_extra": 23,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 16,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Dev/Brachyura_zoea_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 69,
+      "label": -1,
+      "role": "extra_dev",
+      "selected": {
+        "reserved_extra": 41,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 28,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Dev/Polychaeta_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 53,
+      "label": -1,
+      "role": "extra_dev",
+      "selected": {
+        "reserved_extra": 31,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 22,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Dev/Tornaria_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 54,
+      "label": -1,
+      "role": "extra_dev",
+      "selected": {
+        "reserved_extra": 32,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 22,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Test/Enteromorphaprolifra": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 2,
+      "inventory_count": 17,
+      "label": -1,
+      "role": "extra_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 15,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Test/Fish_eggs": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 7,
+      "inventory_count": 26,
+      "label": -1,
+      "role": "extra_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 19,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Test/Fish_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 19,
+      "inventory_count": 41,
+      "label": -1,
+      "role": "extra_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 22,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Test/Megalopa_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 12,
+      "inventory_count": 82,
+      "label": -1,
+      "role": "extra_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 70,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Test/Ophioplutues_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 11,
+      "inventory_count": 47,
+      "label": -1,
+      "role": "extra_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 36,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_OOD_Test/Porcellana_zoea_larva": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 11,
+      "inventory_count": 59,
+      "label": -1,
+      "role": "extra_test",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 48,
+        "test_intra": 0,
+        "test_known": 0,
+        "train": 0,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_TT/Amphipoda/Themisto_gracilipes": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 47,
+      "label": 0,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 9,
+        "train": 34,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 4
+      }
+    },
+    "Zooplankton_TT/Appendiculata/Oikopleura": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 103,
+      "label": 1,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 20,
+        "train": 73,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 10
+      }
+    },
+    "Zooplankton_TT/Cladocera/Evadne_tergestina": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 99,
+      "label": 2,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 19,
+        "train": 71,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 9
+      }
+    },
+    "Zooplankton_TT/Cladocera/Penilia_avirostris": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 157,
+      "label": 3,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 31,
+        "train": 111,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 15
+      }
+    },
+    "Zooplankton_TT/Copepoda/Acartia_hongi": {
+      "excluded_exact_duplicates": 7,
+      "inactive_restored_test": 0,
+      "inventory_count": 196,
+      "label": 4,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 39,
+        "train": 131,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 19
+      }
+    },
+    "Zooplankton_TT/Copepoda/Calanopia_thompsoni": {
+      "excluded_exact_duplicates": 2,
+      "inactive_restored_test": 0,
+      "inventory_count": 10,
+      "label": 5,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 2,
+        "train": 6,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 0
+      }
+    },
+    "Zooplankton_TT/Copepoda/Calanus_sinicus": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 173,
+      "label": 6,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 34,
+        "train": 122,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 17
+      }
+    },
+    "Zooplankton_TT/Copepoda/Centropages_dorsispinatus": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 63,
+      "label": 7,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 12,
+        "train": 45,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 6
+      }
+    },
+    "Zooplankton_TT/Copepoda/Eurytemora_pacifica": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 22,
+      "label": 8,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 4,
+        "train": 16,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 2
+      }
+    },
+    "Zooplankton_TT/Copepoda/Oithona_similis": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 91,
+      "label": 9,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 18,
+        "train": 64,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 9
+      }
+    },
+    "Zooplankton_TT/Copepoda/Paracalanus_parvus": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 129,
+      "label": 10,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 25,
+        "train": 92,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 12
+      }
+    },
+    "Zooplankton_TT/Copepoda/Pontellopsis_tenuicauda": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 10,
+      "label": 11,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 2,
+        "train": 7,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 1
+      }
+    },
+    "Zooplankton_TT/Copepoda/Pseudodiaptomus_marinus": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 56,
+      "label": 12,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 11,
+        "train": 40,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 5
+      }
+    },
+    "Zooplankton_TT/Euphausiacea/Euphausia_pacifica": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 189,
+      "label": 13,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 37,
+        "train": 134,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 18
+      }
+    },
+    "Zooplankton_TT/Medusae/Aurelia_aurita": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 10,
+      "label": 14,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 2,
+        "train": 7,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 1
+      }
+    },
+    "Zooplankton_TT/Medusae/Bougainvillia_muscus": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 36,
+      "label": 15,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 7,
+        "train": 26,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 3
+      }
+    },
+    "Zooplankton_TT/Medusae/Clytia_folleata": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 47,
+      "label": 16,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 9,
+        "train": 34,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 4
+      }
+    },
+    "Zooplankton_TT/Medusae/Dipurena_ophiogaeter": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 69,
+      "label": 17,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 13,
+        "train": 50,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 6
+      }
+    },
+    "Zooplankton_TT/Medusae/Eirene": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 131,
+      "label": 18,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 26,
+        "train": 92,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 13
+      }
+    },
+    "Zooplankton_TT/Medusae/Muggiaea_atlantica": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 210,
+      "label": 19,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 42,
+        "train": 147,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 21
+      }
+    },
+    "Zooplankton_TT/Medusae/Obelia_dichotoma": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 61,
+      "label": 20,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 12,
+        "train": 43,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 6
+      }
+    },
+    "Zooplankton_TT/Medusae/Proboscidactyla_flavicirrata": {
+      "excluded_exact_duplicates": 0,
+      "inactive_restored_test": 0,
+      "inventory_count": 49,
+      "label": 21,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 9,
+        "train": 36,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 4
+      }
+    },
+    "Zooplankton_TT/Sagittoidea/Sagitta": {
+      "excluded_exact_duplicates": 10,
+      "inactive_restored_test": 0,
+      "inventory_count": 341,
+      "label": 22,
+      "role": "known",
+      "selected": {
+        "reserved_extra": 0,
+        "reserved_near": 0,
+        "test_extra": 0,
+        "test_intra": 0,
+        "test_known": 68,
+        "train": 229,
+        "val_extra": 0,
+        "val_intra": 0,
+        "val_known": 34
+      }
+    }
+  },
+  "schema_version": "taxosieve_statistics_v1",
+  "selected_counts": {
+    "reserved_extra": 127,
+    "reserved_near": 98,
+    "test_extra": 210,
+    "test_intra": 182,
+    "test_known": 451,
+    "train": 1610,
+    "val_extra": 88,
+    "val_intra": 69,
+    "val_known": 219
+  },
+  "selected_unique_counts": {
+    "reserved_extra": 127,
+    "reserved_near": 98,
+    "test_extra": 210,
+    "test_intra": 182,
+    "test_known": 450,
+    "train": 1610,
+    "val_extra": 88,
+    "val_intra": 69,
+    "val_known": 219
+  }
+}

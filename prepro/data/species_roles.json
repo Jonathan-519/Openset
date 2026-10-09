@@ -1,0 +1,66 @@
+{
+  "classes": {
+    "Zooplankton_NearUnknown_Dev": {
+      "Copepoda/Acartia_pacifica": 3,
+      "Copepoda/Centropages_tenuiremis": 3,
+      "Medusae/Sugiura_chengshanense": 5,
+      "Medusae/Zanclea_costata": 5
+    },
+    "Zooplankton_NearUnknown_Test": {
+      "Copepoda/Corycaeus_affinis": 3,
+      "Copepoda/Oithona_plumifera": 3,
+      "Copepoda/Tortanus_derjugini": 3,
+      "Medusae/Gonionemus_vertens": 5,
+      "Medusae/Turritopsis_nutricula": 5
+    },
+    "Zooplankton_OOD_Dev": {
+      "Alima_larva": -1,
+      "Brachyura_zoea_larva": -1,
+      "Polychaeta_larva": -1,
+      "Tornaria_larva": -1
+    },
+    "Zooplankton_OOD_Test": {
+      "Enteromorphaprolifra": -1,
+      "Fish_eggs": -1,
+      "Fish_larva": -1,
+      "Megalopa_larva": -1,
+      "Ophioplutues_larva": -1,
+      "Porcellana_zoea_larva": -1
+    },
+    "Zooplankton_TT": {
+      "Amphipoda/Themisto_gracilipes": 0,
+      "Appendiculata/Oikopleura": 1,
+      "Cladocera/Evadne_tergestina": 2,
+      "Cladocera/Penilia_avirostris": 3,
+      "Copepoda/Acartia_hongi": 4,
+      "Copepoda/Calanopia_thompsoni": 5,
+      "Copepoda/Calanus_sinicus": 6,
+      "Copepoda/Centropages_dorsispinatus": 7,
+      "Copepoda/Eurytemora_pacifica": 8,
+      "Copepoda/Oithona_similis": 9,
+      "Copepoda/Paracalanus_parvus": 10,
+      "Copepoda/Pontellopsis_tenuicauda": 11,
+      "Copepoda/Pseudodiaptomus_marinus": 12,
+      "Euphausiacea/Euphausia_pacifica": 13,
+      "Medusae/Aurelia_aurita": 14,
+      "Medusae/Bougainvillia_muscus": 15,
+      "Medusae/Clytia_folleata": 16,
+      "Medusae/Dipurena_ophiogaeter": 17,
+      "Medusae/Eirene": 18,
+      "Medusae/Muggiaea_atlantica": 19,
+      "Medusae/Obelia_dichotoma": 20,
+      "Medusae/Proboscidactyla_flavicirrata": 21,
+      "Sagittoidea/Sagitta": 22
+    }
+  },
+  "reserved_unknown_policy": "inactive; not consumed by training",
+  "roots": {
+    "extra_dev": "prepro/data/image/Zooplankton_OOD_Dev",
+    "extra_test": "prepro/data/image/Zooplankton_OOD_Test",
+    "known": "prepro/data/image/Zooplankton_TT",
+    "near_dev": "prepro/data/image/Zooplankton_NearUnknown_Dev",
+    "near_test": "prepro/data/image/Zooplankton_NearUnknown_Test"
+  },
+  "schema_version": "taxosieve_species_roles_v1",
+  "unknown_gradient_training": false
+}

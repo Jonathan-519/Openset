@@ -39,7 +39,7 @@ def runtime_versions():
 def effective_config(path=DEFAULT_CONFIG):
     cfg = yaml.safe_load(resolve(path).read_text(encoding="utf-8"))
     # This entry point intentionally reproduces one experiment. New ablations
-    # belong in comparison_experiments, with a distinct identity and receipt.
+    # require a separate implementation, with a distinct identity and receipt.
     if object_hash(cfg) != object_hash(DEFAULTS):
         raise ValueError("TaxoSieve settings differ from the locked TaxoSieve_v1 recipe")
     return copy.deepcopy(cfg)

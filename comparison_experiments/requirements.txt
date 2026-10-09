@@ -1,6 +1,0 @@
--r ../requirements.txt
-scipy
-scikit-learn
-pandas
-tensorboardX
-termcolor

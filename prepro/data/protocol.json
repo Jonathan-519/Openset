@@ -1,0 +1,134 @@
+{
+  "content_hash_seed": null,
+  "experiment": "TaxoSieve",
+  "historical_source_commit": "2ed29cb90c5ed53425016f1090c28bc93393f395",
+  "image_decode_scope": "integrity audit only; no model features or fitting",
+  "inventory_sha256": "0ffdd1cce713848c51f0d5ac7bdef9793e811e5863ff7cc53c1f46555425600f",
+  "known_identity_policy": "preserve historical assignments; SHA256 priority TEST > VAL > TRAIN; keep TEST aliases",
+  "manifest_order_sha256": "13a0290d24885a3dc5c051a9e84c97c34c5c3b79ff0c936b5b43b6201cfa7679",
+  "manifests": {
+    "reserved_extra": {
+      "active": false,
+      "count": 127,
+      "gradient_training": false,
+      "path": "prepro/data/gt_reserved_extra.txt",
+      "root": "prepro/data/image/Zooplankton_OOD_Dev",
+      "sha256": "63fdd15e319ebb6ffd4cc77086ce2abc17d485d4fda40a42e876c12ccb77febb",
+      "unique_count": 127
+    },
+    "reserved_near": {
+      "active": false,
+      "count": 98,
+      "gradient_training": false,
+      "path": "prepro/data/gt_reserved_near.txt",
+      "root": "prepro/data/image/Zooplankton_NearUnknown_Dev",
+      "sha256": "851aa8c42d6b168a98b879da31556d94035e29d0f25c9b6c082eea95308fb2b9",
+      "unique_count": 98
+    },
+    "test_extra": {
+      "active": true,
+      "count": 210,
+      "gradient_training": false,
+      "path": "prepro/data/gt_test_extra.txt",
+      "root": "prepro/data/image/Zooplankton_OOD_Test",
+      "sha256": "5d47a92a7eeefe1760dbaad268c11029367d016475ae86ba9a353024fd841e97",
+      "unique_count": 210
+    },
+    "test_intra": {
+      "active": true,
+      "count": 182,
+      "gradient_training": false,
+      "path": "prepro/data/gt_test_intra.txt",
+      "root": "prepro/data/image/Zooplankton_NearUnknown_Test",
+      "sha256": "e7e7cea9e9aae3085e94bc68a258fa11d96d493536a15f33b39a6080fc0ac24e",
+      "unique_count": 182
+    },
+    "test_known": {
+      "active": true,
+      "count": 451,
+      "gradient_training": false,
+      "path": "prepro/data/gt_test_known.txt",
+      "root": "prepro/data/image/Zooplankton_TT",
+      "sha256": "7c32acecc644d7191d5ee6bb4947767f55ca2dbdd9184d7758e013f4c122416b",
+      "unique_count": 450
+    },
+    "train": {
+      "active": true,
+      "count": 1610,
+      "gradient_training": true,
+      "path": "prepro/data/gt_train.txt",
+      "root": "prepro/data/image/Zooplankton_TT",
+      "sha256": "fe38f5549c601ddcd204945306aa0adebb5aa72619054785e5ef2f9980563e79",
+      "unique_count": 1610
+    },
+    "val_extra": {
+      "active": true,
+      "count": 88,
+      "gradient_training": false,
+      "path": "prepro/data/gt_val_extra.txt",
+      "root": "prepro/data/image/Zooplankton_OOD_Dev",
+      "sha256": "728f7d8d4f9c3fd2d5071d183216059f2e51b734182834d0a07e30abaffbca3f",
+      "unique_count": 88
+    },
+    "val_intra": {
+      "active": true,
+      "count": 69,
+      "gradient_training": false,
+      "path": "prepro/data/gt_val_intra.txt",
+      "root": "prepro/data/image/Zooplankton_NearUnknown_Dev",
+      "sha256": "fd7fd2e91c8d5f72cfc2d5c0666293c8b07484cbb8c111a58d6b05fa8a1e35e8",
+      "unique_count": 69
+    },
+    "val_known": {
+      "active": true,
+      "count": 219,
+      "gradient_training": false,
+      "path": "prepro/data/gt_val_known.txt",
+      "root": "prepro/data/image/Zooplankton_TT",
+      "sha256": "cd409a6602e118f84e634f3f478692d29c0acb7a1423a04b41c8f3633668d12a",
+      "unique_count": 219
+    }
+  },
+  "new_dataset_after_inventory_change": true,
+  "new_dev_unknown_split": null,
+  "new_known_split": null,
+  "output": "prepro/data",
+  "protocol_version": "taxosieve_v1_renamed",
+  "restored_test_manifests": {
+    "test_extra": {
+      "active": false,
+      "count": 62,
+      "gradient_training": false,
+      "path": "prepro/data/gt_restored_test_extra.txt",
+      "root": "prepro/data/image/Zooplankton_OOD_Test",
+      "sha256": "68da94b88c2c01560a1b94cba79272766503bc8c554d80316aba8d794b98e14b"
+    },
+    "test_intra": {
+      "active": false,
+      "count": 22,
+      "gradient_training": false,
+      "path": "prepro/data/gt_restored_test_intra.txt",
+      "root": "prepro/data/image/Zooplankton_NearUnknown_Test",
+      "sha256": "9859317b075e1850561f8921ddba70de0ef7315d78a48e3bcf73f3d57d67a9b1"
+    }
+  },
+  "roots": {
+    "extra_dev": "prepro/data/image/Zooplankton_OOD_Dev",
+    "extra_test": "prepro/data/image/Zooplankton_OOD_Test",
+    "known": "prepro/data/image/Zooplankton_TT",
+    "near_dev": "prepro/data/image/Zooplankton_NearUnknown_Dev",
+    "near_test": "prepro/data/image/Zooplankton_NearUnknown_Test"
+  },
+  "schema_version": "taxosieve_dataset_v1",
+  "seed_sha256": "9c741d6807f679424b7f7c98241f0e64b72e5fd6f3d1ff5f9dbd06376e5deef8",
+  "split_policy": "frozen main-experiment identities, labels and row order; reject missing/new identities; audited restored TEST inactive",
+  "taxonomy_sha256": {
+    "known_leaf_order.txt": "a933386dbca9ff55953ef82a690c441cd760a6df77073975a830bb6dd81b50c1",
+    "leaf_nodes.npy": "a62cb69f57b3d886beb59c4fe89a121d4a4a0002fe1606deb72f3b6232125a36",
+    "tree.npy": "f7a49bea63f098492019bb6fd4113922aff047012e34b603bbf8eae3f69fe372"
+  },
+  "test_alias_policy": "all assigned TEST rows retained, unique counts reported separately",
+  "unknown_gradient_training": false,
+  "unknown_reserves_active": false,
+  "unknown_test_sources_disjoint_from_dev": true
+}
