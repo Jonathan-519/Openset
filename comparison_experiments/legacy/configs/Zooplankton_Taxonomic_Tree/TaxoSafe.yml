@@ -1,0 +1,153 @@
+seed: 1
+name: TaxoSafe-v3
+
+model:
+  arch: maple
+  name: ViT-B/16
+  prec: fp16
+  n_ctx: 2
+  ctx_init: "a photo of a"
+  prompt_depth: 3
+
+data:
+  name: Zooplankton_TaxoSafe_fold1
+  loader: TaxoSafeDataLoader
+
+  # 只包含 Fold 1 已知物种的目录（或软链接视图）
+  data_root: prepro
+
+  # 包含七个父类和所有物种的原始目录，用于 intra unknown
+  full_data_root: prepro
+
+  # 七个父类体系之外的数据，用于 OE 和 extra unknown
+  ood_root: .
+
+  # known-only split：标签必须是 known-only tree 的叶类 ID（0-16）
+  train: prepro/data/Zooplankton_Taxonomic_Tree/gt_train_known.txt
+  val_known: prepro/data/Zooplankton_Taxonomic_Tree/gt_val_known.txt
+  test_known: prepro/data/Zooplankton_Taxonomic_Tree/gt_test_known.txt
+
+  # intra unknown split：标签建议直接使用真实父类 ID（0-6）
+  val_intra: prepro/data/Zooplankton_Taxonomic_Tree/gt_val_intra.txt
+  test_intra: prepro/data/Zooplankton_Taxonomic_Tree/gt_test_intra.txt
+
+  # extra/OE split：标签使用 -1；训练入口只将 oe_train 用于 OE loss
+  oe_train: prepro/data/Zooplankton_Taxonomic_Tree/gt_oe_train.txt
+  val_extra: prepro/data/Zooplankton_Taxonomic_Tree/gt_val_extra.txt
+  test_extra: prepro/data/Zooplankton_Taxonomic_Tree/gt_test_extra.txt
+
+  # 只含 17 个已知叶物种的 Fold 1 分类树
+  hierarchy: prepro/data/Zooplankton_Taxonomic_Tree/tree.npy
+  num_known_leaves: 17
+
+  batch_size: 8
+  eval_batch_size: 16
+  n_workers: 4
+  transform: clip
+
+  # 2 个父类 × 每个父类 2 个物种 × 每个物种 2 张图 = batch size 8
+  sampler:
+    name: hierarchical_episode
+    parents_per_batch: 2
+    species_per_parent: 2
+    images_per_species: 2
+    batches_per_epoch: 200
+    seed: 1
+    ensure_rankable_parent: true
+    # 必须和 open_treecut 的 holdout 设置完全一致
+    pseudo_holdout_mode: epoch
+    holdout_seed: 1
+    
+init_label_set: leaf
+
+open_treecut:
+  # 一个 epoch 内固定隐藏叶类，下一 epoch 轮换；避免 batch 间标签角色冲突
+  holdout_mode: epoch
+  holdout_seed: 1
+  collapse_prob: 0.20
+  # 仅供 holdout_mode=batch 的旧版消融使用
+  hide_prob: 1.00
+  unknown_template: "novel member of {}"
+  force_one_pseudo_per_batch: true
+
+loss:
+  name: taxosafe
+  lambda_ncl: 0.50
+  lambda_cons: 0.10
+  # v3：正确叶类相对 ranking + 两侧绝对边界 + 父子证据间隔
+  lambda_rank: 0.25
+  lambda_child_known: 0.10
+  lambda_child_novel: 0.50
+  lambda_pceg: 0.20
+  rank_margin: 0.08
+  known_child_margin: 0.30
+  pseudo_child_margin: 0.28
+  pceg_margin: 0.04
+  novelty_warmup_epochs: 5
+  # 绝对父类证据约束：解决 CE 分类正确但 root cosine 偏低的问题
+  lambda_root: 0.20
+  known_parent_margin: 0.28
+  # 当前 gt_oe_train 只有 13 张气泡图，不能用于正式 OE，暂时保持 0
+  lambda_oe: 0.0
+  min_oe_train_samples: 100
+  allow_small_oe: false
+  oe_margin: 0.15
+  oe_leaf_margin: 0.15
+  oe_entropy_weight: 0.10
+  oe_leaf_weight: 0.25
+  oe_warmup_epochs: 5
+
+calibration:
+  # balanced 用于主要精度/覆盖率结果；另用 --policy safe 生成安全工作点
+  selection_policy: balanced
+  root_false_accept_limit: 0.05
+  over_specification_limit: 0.05
+  # 防止校准通过“几乎全部拒绝”虚假满足 5% 风险约束
+  min_root_correct_parent_acceptance: 0.85
+  min_known_correct_leaf_acceptance: 0.65
+  branch_specific: true
+  min_branch_extra_samples: 20
+  min_branch_root_positive_samples: 30
+  min_branch_intra_samples: 30
+  min_branch_known_samples: 10
+  root_grid_points: 800
+  child_grid_points: 121
+  gap_grid_points: 161
+  std_epsilon: 0.000001
+  # 小分支的均值/方差向 pooled known 分布收缩，避免 3-4 张图造成极端 z-score
+  moment_shrinkage_strength: 20.0
+  risk_curve_points: 41
+  # 三种互补的子类证据固定融合；权重只能由 validation/消融决定
+  child_score_weights:
+    child_score: 0.34
+    child_margin: 0.33
+    child_neg_entropy: 0.33
+  # 仅使用 validation 自动选一个体系内/体系外证据，测试集不参与选择
+  root_score_candidates:
+    - parent_score
+    - parent_margin
+    - parent_msp
+    - parent_neg_entropy
+    - parent_logsumexp
+
+optim:
+  name: sgd
+  lr: 0.02
+  momentum: 0.9
+  weight_decay: 0.0005
+  sgd_dampening: 0.0
+  sgd_nesterov: false
+
+  max_epoch: 200
+  early_stopping_patience: 30
+  early_stopping_min_delta: 0.0
+  lr_scheduler: cosine
+  warmup_epoch: 1
+  warmup_type: constant
+  warmup_cons_lr: 0.001
+  use_scheduler: true
+
+eval_freq: 1
+print_freq: 20
+
+exp: ViT-B_16/full/TaxoSafe-v3/fold1

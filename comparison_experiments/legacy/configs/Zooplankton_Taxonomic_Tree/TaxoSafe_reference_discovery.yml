@@ -1,0 +1,96 @@
+name: TaxoSafe independent rejection and prompt controls
+seed: 1
+arms:
+- id: D00_reference
+  kind: baseline
+  representation: source
+  method: reference
+  router: reference
+  candidate: reference
+- id: D01_source_rmd
+  kind: geometry
+  representation: source
+  method: rmd
+  router: global
+  candidate: reference
+- id: D02_clip_rmd
+  kind: geometry
+  representation: clip
+  method: rmd
+  router: global
+  candidate: reference
+- id: D03_single_prompt
+  kind: text
+  representation: clip
+  method: single
+  router: global
+  candidate: reference
+- id: D04_domain_prompt
+  kind: text
+  representation: clip
+  method: ensemble
+  router: global
+  candidate: reference
+- id: D05_episode_bce
+  kind: verifier
+  representation: clip
+  method: bce
+  router: global
+  candidate: reference
+- id: D06_episode_rank
+  kind: verifier
+  representation: clip
+  method: bce_rank
+  router: global
+  candidate: reference
+- id: D07_parentwise
+  kind: reuse
+  representation: clip
+  method: bce_rank
+  router: parentwise
+  candidate: reference
+  weight_source: D06_episode_rank
+- id: D08_residual
+  kind: projection
+  representation: clip
+  method: bce_rank
+  router: global
+  candidate: reference
+- id: D09_coop
+  kind: prompt
+  representation: clip
+  method: coop
+  router: global
+  candidate: text
+- id: D10_forced_prompt
+  kind: prompt
+  representation: clip
+  method: fa
+  router: global
+  candidate: text
+geometry:
+  shrinkage: 0.1
+verifier:
+  folds: 3
+  epochs: 100
+  batch_size: 1024
+  lr: 0.001
+  ranking_weight: 0.2
+projection:
+  epochs: 20
+  batch_size: 64
+  learning_rate: 0.001
+  bottleneck: 64
+  temperature: 0.1
+  supcon_weight: 0.1
+prompt:
+  epochs: 20
+  batch_size: 256
+  lr: 0.002
+  n_ctx: 4
+  reference_weight: 3.0
+  temperature: 1.0
+calibration:
+  seed: 1
+  shrinkage: 20.0
+  min_parent_known: 5

@@ -1,0 +1,28 @@
+# Reuse the SAME model/data configuration and Trial 4 best.pth.
+# This extension performs no gradient updates and writes to visual_support_v4/.
+# Use the archived training configuration, not a subsequently edited YAML.
+# If using another trained trial, update this path AND --run-dir accordingly.
+base_config: runs/Zooplankton_TaxoSafe_fold1/maple/ViT-B_16/full/TaxoSafe-v3/fold1/trial_4/TaxoSafe.yml
+
+visual_support:
+  seed: 41
+  max_memory_per_leaf: 256
+  child_k: 3
+  root_k: 10
+  query_chunk_size: 128
+  cache_scale: 20.0
+  routing_alphas: [0.0, 0.25, 0.50]
+  fit_fraction: 0.50
+  shrinkage_strength: 20.0
+
+  # Empirical per-source risk, NOT a guarantee on future species/sensors.
+  root_far_limit: 0.05
+  child_oser_limit: 0.05
+
+  # Alternate coverage profile. Quantiles are fit on correctly classified
+  # held-out validation positives, not on test examples.
+  root_id_rejection: 0.10
+  child_known_rejection: 0.10
+
+  # Predeclare this before testing. Both profiles can be evaluated in ONE pass.
+  primary_profile: coverage

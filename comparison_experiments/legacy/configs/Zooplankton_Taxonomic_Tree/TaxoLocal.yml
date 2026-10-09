@@ -1,0 +1,96 @@
+seed: 1
+name: TaxoLocal-v1
+model:
+  arch: maple
+  name: ViT-B/16
+  prec: fp16
+  n_ctx: 2
+  ctx_init: a photo of a
+  prompt_depth: 3
+data:
+  name: Zooplankton_TaxoLocal_fold1
+  loader: TaxoSafeDataLoader
+  data_root: prepro
+  full_data_root: prepro
+  ood_root: .
+  train: prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1/gt_train.txt
+  val_known: prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1/gt_val_known.txt
+  test_known: prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1/gt_test_known.txt
+  dev_unknown: prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1/gt_dev_unknown.txt
+  test_unknown: prepro/data/Zooplankton_Taxonomic_Tree_taxolocal_v1/gt_test_unknown.txt
+  val_extra: prepro/data/Zooplankton_Taxonomic_Tree_clean_v1/gt_val_extra.txt
+  test_extra: prepro/data/Zooplankton_Taxonomic_Tree_clean_v1/gt_test_extra.txt
+  hierarchy: prepro/data/Zooplankton_Taxonomic_Tree/tree.npy
+  num_known_leaves: 17
+  batch_size: 12
+  eval_batch_size: 16
+  n_workers: 4
+  transform: clip
+  sampler:
+    name: hierarchical_episode
+    parents_per_batch: 2
+    species_per_parent: 3
+    images_per_species: 2
+    batches_per_epoch: 200
+    seed: 1
+    ensure_rankable_parent: true
+    pseudo_holdout_mode: epoch
+    holdout_seed: 1
+    hard_sibling_sampling: true
+  split_revision: species-disjoint-taxolocal-v1
+init_label_set: leaf
+open_treecut:
+  holdout_mode: epoch
+  holdout_seed: 1
+  collapse_prob: 0.2
+  hide_prob: 1.0
+  unknown_template: novel member of {}
+  force_one_pseudo_per_batch: true
+loss:
+  name: taxolocal
+  lambda_ncl: 0.5
+  lambda_cons: 0.1
+  mask_hidden_in_consistency: true
+  lambda_local_unknown: 1.0
+  lambda_tax_contrast: 0.25
+  morphology_attention_temperature: 0.1
+  contrastive_temperature: 0.1
+  sibling_negative_weight: 2.0
+  distant_negative_weight: 0.25
+  novelty_warmup_epochs: 5
+  # Superseded v3 score-hinge terms are disabled in the new route.
+  lambda_rank: 0.0
+  lambda_child_known: 0.0
+  lambda_child_novel: 0.0
+  lambda_pceg: 0.0
+  lambda_root: 0.0
+  lambda_oe: 0.0
+  known_child_margin: 0.3
+  pseudo_child_margin: 0.28
+checkpoint_selection:
+  known_weight: 0.5
+  hierarchy_weight: 0.2
+  near_unknown_weight: 0.3
+router:
+  root_known_coverage_floor: 0.95
+  root_novel_coverage_floor: 0.85
+  local_known_coverage_floor: 0.90
+  per_parent_min_dev_unknown: 20
+optim:
+  name: sgd
+  lr: 0.02
+  momentum: 0.9
+  weight_decay: 0.0005
+  sgd_dampening: 0.0
+  sgd_nesterov: false
+  max_epoch: 200
+  early_stopping_patience: 30
+  early_stopping_min_delta: 0.0
+  lr_scheduler: cosine
+  warmup_epoch: 1
+  warmup_type: constant
+  warmup_cons_lr: 0.001
+  use_scheduler: true
+eval_freq: 1
+print_freq: 20
+exp: ViT-B_16/full/TaxoLocal-v1/fold1

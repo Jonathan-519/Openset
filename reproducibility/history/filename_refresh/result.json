@@ -1,0 +1,89 @@
+{
+  "status": "completed",
+  "report": {
+    "schema_version": "h02_filename_refresh_report_v1",
+    "applied": true,
+    "image_count": 3157,
+    "unique_image_contents": 3137,
+    "manifest_count": 14,
+    "renamed_image_count": 3155,
+    "changed_output_count": 15,
+    "changed_output_files": [
+      "prepro/data/Zooplankton_TT_v11_dcbs/gt_train_known.txt",
+      "prepro/data/Zooplankton_TT_v11_dcbs/gt_val_known.txt",
+      "prepro/data/Zooplankton_TT_v11_dcbs/known_deduplication.json",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_oe_train_v10.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_extra.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_intra.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_intra_v10.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_known.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_reference.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra_v10.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra_v10.txt",
+      "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_known.txt"
+    ],
+    "changed_paths": [
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/603.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/1.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/604.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/2.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/605.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/3.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/606.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/4.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/607.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/5.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/608.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/6.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/609.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/7.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/610.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/8.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/611.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/9.jpg"
+      },
+      {
+        "old": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/612.jpg",
+        "new": "prepro/raw/Zooplankton_NearUnknown_Dev/Copepoda/Acartia_pacifica/10.jpg"
+      }
+    ],
+    "additional_changed_paths": 3145,
+    "known_original_counts": {
+      "train": 1628,
+      "val_known": 220,
+      "test_known": 451
+    },
+    "known_retained_counts": {
+      "train": 1610,
+      "val_known": 219,
+      "test_known": 451
+    },
+    "unique_test_known_images": 450,
+    "backup_directory": "/home/ubuntu/hdd/data/qz/Openset/prepro/backups/h02_filenames_20261007T125150975589Z_ff9qjsoe",
+    "messages": [
+      "Filename-only refresh: image bytes, parent directories, split order, labels and indices are preserved.",
+      "If manifest bytes change, previous completed-run bindings become stale; use a new run directory.",
+      "Images, taxonomy, configuration and existing runs are never rewritten."
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+# Does not retrain MaPLe or alter historical configurations.
+# Parent scores AND the reference parent threshold remain frozen.
+name: TaxoSafe-Frozen-Reference-Reconstruction-v1
+seed: 1
+features: fine
+reconstruction:
+  rank: 16
+  score_mode: relative
+  scale_init: 1.0
+  eps: 1.0e-8
+training:
+  epochs: 40
+  batch_size: 128
+  learning_rate: 0.001
+  validation_fraction: 0.2
+  patience: 8
+calibration:
+  grid_points: 49
+  source_loo: true

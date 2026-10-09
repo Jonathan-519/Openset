@@ -1,0 +1,18 @@
+method: TaxoSafe-Safety-Interlock-v9
+classifier: frozen_v4_identity
+primary_variant: full
+variants: [identity, morphology_only, semantic_only, no_coherence, full]
+projection_dim: 64
+projection_seed: 105
+witnesses: 3
+semantic_k: 3
+support_per_leaf: 48
+query_per_leaf: 24
+regularizer: 0.01
+conformal_alpha: 0.10
+hierarchical_shrinkage: 10.0
+veto_leaf_multiplier: 2.0
+rescue_parent_multiplier: 2.0
+rescue_leaf_multiplier: 4.0
+threads: 4
+protocol: development_only_policy_informed_by_v8_validation_requires_fresh_confirmation

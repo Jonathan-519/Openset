@@ -1,0 +1,15 @@
+# Main experiment runtime dependencies, reconstructed from source imports.
+# This is not a historical environment lock. Keep the working ProTeCt environment.
+# Install a matching torch/torchvision pair for the local CUDA version first;
+# the recorded successful server used torch 1.12.1 and CUDA 11.3.
+# Do not use --upgrade merely to run this repository.
+torch>=1.12
+torchvision>=0.13
+numpy>=1.21,<2
+Pillow>=9
+PyYAML>=6
+scikit-learn>=1.0
+ftfy>=6
+regex
+packaging>=21
+tqdm>=4

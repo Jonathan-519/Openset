@@ -1,0 +1,219 @@
+seed: 1
+name: TaxoSafe-v9-rebuild
+
+model:
+  arch: maple
+  name: ViT-B/16
+  prec: fp16
+  n_ctx: 2
+  ctx_init: "a photo of a"
+  prompt_depth: 3
+
+
+data:
+  name: Zooplankton_TaxoSafe_v9_rebuild
+  loader: TaxoSafeDataLoader
+
+  # ==========================================================
+  # Known taxonomy
+  # ==========================================================
+  data_root: prepro/raw/Zooplankton_TT
+
+  # ==========================================================
+  # Near Unknown
+  # ==========================================================
+  near_dev_root: prepro/raw/Zooplankton_NearUnknown_Dev
+  near_test_root: prepro/raw/Zooplankton_NearUnknown_Test
+
+  # ==========================================================
+  # Global Unknown / Extra OOD
+  # ==========================================================
+  ood_dev_root: prepro/raw/Zooplankton_OOD_Dev
+  ood_test_root: prepro/raw/Zooplankton_OOD_Test
+
+  # ==========================================================
+  # Legacy fallback
+  # 只是为了兼容旧 loader/config；新 split 不依赖它们
+  # ==========================================================
+  full_data_root: prepro
+  ood_root: .
+
+  # ==========================================================
+  # Known manifests
+  # ==========================================================
+  train: prepro/data/Zooplankton_TT_v9_rebuild/gt_train_known.txt
+
+  val_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_known.txt
+
+  test_known: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt
+
+  # ==========================================================
+  # Near Unknown
+  #
+  # val_intra/test_intra are used only after training for
+  # calibration/final evaluation; they are not loaded by train_taxosafe.py.
+  # ==========================================================
+  val_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra.txt
+
+  test_intra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_intra.txt
+
+  # ==========================================================
+  # Global Unknown
+  # ==========================================================
+  val_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra.txt
+
+  test_extra: prepro/data/Zooplankton_TT_v9_rebuild/gt_test_extra.txt
+
+  # ==========================================================
+  # Optional OE
+  # Primary experiment is OE-free (lambda_oe: 0.0), so no oe_train manifest.
+  # ==========================================================
+
+  # ==========================================================
+  # Known-only hierarchy
+  # ==========================================================
+  hierarchy: prepro/data/Zooplankton_TT_v9_rebuild/tree.npy
+
+  # 如果最终采用：
+  #   NearUnknown Dev = 2 Copepoda + 2 Medusae
+  #   Locked NearUnknown Test = 5 species
+  # 则 32 - 4 - 5 = 23 Known leaves
+  num_known_leaves: 23
+
+  batch_size: 8
+  eval_batch_size: 16
+  n_workers: 4
+  transform: clip
+
+  sampler:
+    name: hierarchical_episode
+    parents_per_batch: 2
+    species_per_parent: 2
+    images_per_species: 2
+    batches_per_epoch: 200
+    seed: 1
+    ensure_rankable_parent: true
+    pseudo_holdout_mode: epoch
+    holdout_seed: 1
+
+
+init_label_set: leaf
+
+
+open_treecut:
+  holdout_mode: epoch
+  holdout_seed: 1
+
+  collapse_prob: 0.20
+
+  hide_prob: 1.00
+
+  unknown_template: "novel member of {}"
+
+  force_one_pseudo_per_batch: true
+
+
+loss:
+  name: taxosafe
+
+  lambda_ncl: 0.50
+  lambda_cons: 0.10
+
+  lambda_rank: 0.25
+  lambda_child_known: 0.10
+  lambda_child_novel: 0.50
+  lambda_pceg: 0.20
+
+  rank_margin: 0.08
+  known_child_margin: 0.30
+  pseudo_child_margin: 0.28
+  pceg_margin: 0.04
+
+  novelty_warmup_epochs: 5
+
+  lambda_root: 0.20
+  known_parent_margin: 0.28
+
+  # ----------------------------------------------------------
+  # Primary protocol is OE-free.
+  # OOD Dev is calibration data, not OE training data.
+  # ----------------------------------------------------------
+  lambda_oe: 0.0
+
+  min_oe_train_samples: 100
+  allow_small_oe: false
+
+  oe_margin: 0.15
+  oe_leaf_margin: 0.15
+  oe_entropy_weight: 0.10
+  oe_leaf_weight: 0.25
+  oe_warmup_epochs: 5
+
+
+calibration:
+  selection_policy: balanced
+
+  root_false_accept_limit: 0.05
+  over_specification_limit: 0.05
+
+  min_root_correct_parent_acceptance: 0.85
+  min_known_correct_leaf_acceptance: 0.65
+
+  branch_specific: true
+
+  min_branch_extra_samples: 20
+  min_branch_root_positive_samples: 30
+  min_branch_intra_samples: 30
+  min_branch_known_samples: 10
+
+  root_grid_points: 800
+  child_grid_points: 121
+  gap_grid_points: 161
+
+  std_epsilon: 0.000001
+
+  moment_shrinkage_strength: 20.0
+
+  risk_curve_points: 41
+
+  child_score_weights:
+    child_score: 0.34
+    child_margin: 0.33
+    child_neg_entropy: 0.33
+
+  root_score_candidates:
+    - parent_score
+    - parent_margin
+    - parent_msp
+    - parent_neg_entropy
+    - parent_logsumexp
+
+
+optim:
+  name: sgd
+
+  lr: 0.02
+  momentum: 0.9
+  weight_decay: 0.0005
+
+  sgd_dampening: 0.0
+  sgd_nesterov: false
+
+  max_epoch: 200
+
+  early_stopping_patience: 30
+  early_stopping_min_delta: 0.0
+
+  lr_scheduler: cosine
+
+  warmup_epoch: 1
+  warmup_type: constant
+  warmup_cons_lr: 0.001
+
+  use_scheduler: true
+
+
+eval_freq: 1
+print_freq: 20
+
+exp: ViT-B_16/full/TaxoSafe-v9-rebuild

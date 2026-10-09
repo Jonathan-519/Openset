@@ -1,0 +1,388 @@
+{
+  "schema_version": "h02_historical_replay_v1",
+  "repository": "Jonathan-519/Openset",
+  "source_commit": "abe3a982c4a6236cfbd57d7ca4169a6f5117950f",
+  "source_run": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged",
+  "validation_scope": "frozen_score_algorithm_replay; no image forward pass or training",
+  "meta": {
+    "parent_names": [
+      "Amphipoda",
+      "Appendiculata",
+      "Cladocera",
+      "Copepoda",
+      "Euphausiacea",
+      "Medusae",
+      "Sagittoidea"
+    ],
+    "leaf_names": [
+      "Themisto gracilipes",
+      "Oikopleura",
+      "Evadne tergestina",
+      "Penilia avirostris",
+      "Acartia hongi",
+      "Calanopia thompsoni",
+      "Calanus sinicus",
+      "Centropages dorsispinatus",
+      "Eurytemora pacifica",
+      "Oithona similis",
+      "Paracalanus parvus",
+      "Pontellopsis tenuicauda",
+      "Pseudodiaptomus marinus",
+      "Euphausia pacifica",
+      "Aurelia aurita",
+      "Bougainvillia muscus",
+      "Clytia folleata",
+      "Dipurena ophiogaeter",
+      "Eirene",
+      "Muggiaea atlantica",
+      "Obelia dichotoma",
+      "Proboscidactyla flavicirrata",
+      "Sagitta"
+    ],
+    "leaf_to_parent": [
+      0,
+      1,
+      2,
+      2,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      4,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      6
+    ]
+  },
+  "methods": {
+    "root_method": "d05_candidate",
+    "leaf_method": "d05",
+    "candidate_policy": "reference_path"
+  },
+  "settings": {
+    "root_known_target": 0.92,
+    "root_near_target": 0.85,
+    "seed": 1
+  },
+  "reference_calibration_settings": {
+    "decoder": "membership",
+    "policy": "known_first",
+    "threshold_grid": "quantile",
+    "membership_grid_points": 49,
+    "source_loo": true
+  },
+  "thresholds": {
+    "root": 0.08034489303827286,
+    "leaf": 2.167559862136841
+  },
+  "hashes": {
+    "h02_router_sha256": "54e471b70bd20301ed8052fd2504fb0546457555791f8cacc37743b019396e57",
+    "root_state_sha256": "3e4863761bef20747f3afa86f6d52739700863b97bee28beceed3492e5533ffe",
+    "d05_router_sha256": "bb407782d3a226da3864293936f5d8128a9e5c2ab02aa495ec01f24bd406eb8f",
+    "reference_calibration_sha256": "f1e02989aacdeee201e874d9339631071356abb575f6560b9447186af4c9db33"
+  },
+  "dev": {
+    "counts": {
+      "known": 219,
+      "intra": 69,
+      "extra": 88,
+      "known_correct": 199,
+      "intra_correct": 48,
+      "extra_correct": 38,
+      "leaf_outputs": 216
+    },
+    "input_record_count": 376,
+    "unique_image_count": 376,
+    "duplicate_record_count": 0,
+    "metrics": {
+      "known_end_to_end_leaf_accuracy": 0.908675799086758,
+      "intra_correct_fallback_rate": 0.6956521739130435,
+      "extra_global_unknown_recall": 0.4318181818181818,
+      "open_world_accepted_leaf_precision": 0.9212962962962963
+    },
+    "targets_passed": false
+  },
+  "test": {
+    "counts": {
+      "known": 450,
+      "intra": 204,
+      "extra": 272,
+      "known_correct": 406,
+      "intra_correct": 151,
+      "extra_correct": 165,
+      "leaf_outputs": 472
+    },
+    "input_record_count": 927,
+    "unique_image_count": 926,
+    "duplicate_record_count": 1,
+    "metrics": {
+      "known_end_to_end_leaf_accuracy": 0.9022222222222223,
+      "intra_correct_fallback_rate": 0.7401960784313726,
+      "extra_global_unknown_recall": 0.6066176470588235,
+      "open_world_accepted_leaf_precision": 0.8601694915254238
+    },
+    "targets_passed": false
+  },
+  "oof": {
+    "fold_count": 11,
+    "complete": true,
+    "passed": false,
+    "recovery_passed": false,
+    "counts": {
+      "reference": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 189,
+        "intra_correct": 29,
+        "extra_correct": 68,
+        "leaf_outputs": 224
+      },
+      "selected": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 197,
+        "intra_correct": 44,
+        "extra_correct": 38,
+        "leaf_outputs": 216
+      }
+    },
+    "d05_counts": {
+      "known": 219,
+      "intra": 69,
+      "extra": 88,
+      "known_correct": 196,
+      "intra_correct": 45,
+      "extra_correct": 58,
+      "leaf_outputs": 211
+    },
+    "evaluated_image_count": 376
+  },
+  "files": [
+    {
+      "local_name": "h02_dev_scores.jsonl",
+      "git_blob_sha": "694b2bf1e62dcba33aa4051051cbd13a67531659",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/scores.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/scores.jsonl",
+      "sha256": "6f9d2fa97ff9047e5cc10655c499ef1adcbf86b933f0ec42ffc7df9d31ee2238",
+      "size_bytes": 1572617
+    },
+    {
+      "local_name": "h02_test_scores.jsonl",
+      "git_blob_sha": "8d0fad12622fae0b9edc0257bece18ce82e02280",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/scores.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/scores.jsonl",
+      "sha256": "2ed00cb7c360dbf437b9dd0ffc52ba5bc40a59420ee758e64901c8b801b2ba71",
+      "size_bytes": 3881270
+    },
+    {
+      "local_name": "h02_router.json",
+      "git_blob_sha": "46b25fe79f1426c73540dd2e4253c81b356d7486",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/router.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/router.json",
+      "sha256": "e601d9cb93c99688b787707cdf81574d1a1bcb1f3340e4574846be5a5efc14d1",
+      "size_bytes": 59894
+    },
+    {
+      "local_name": "d05_router.json",
+      "git_blob_sha": "f07972cba3a8e237388161d1383ba36ed1dab21f",
+      "path": "runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/calibration/router.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/calibration/router.json",
+      "sha256": "4bf008f44ca343e3985c80f85ae81baafa1cf7321c83794820e6c26c87402215",
+      "size_bytes": 34121
+    },
+    {
+      "local_name": "c00_router.json",
+      "git_blob_sha": "03df6a736eb38bf4ff5e352e713e8aa027ce9537",
+      "path": "runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/calibration/router.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/calibration/router.json",
+      "sha256": "3f9bd7b5c2d8bcb1bf641f72c756f6fb52c1a3b7fd5ebad1aca9283a343a799f",
+      "size_bytes": 987879
+    },
+    {
+      "local_name": "c00_training_config.json",
+      "git_blob_sha": "3fb6d97beb028e4a9016d2831b2c13062c9038e8",
+      "path": "runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/training/config.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/training/config.json",
+      "sha256": "e3185db841da8606257d3d84262b95e65340c2941a4011dbbe9049721a045905",
+      "size_bytes": 3477
+    },
+    {
+      "local_name": "h02_dev_predictions.jsonl",
+      "git_blob_sha": "fdfb24762bd827b0161953abf10912914217e1a7",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/predictions.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/predictions.jsonl",
+      "sha256": "3d2a1cf5e0c6984745f0a56efa86358e8397633fbde7029e779ca62cb71f2282",
+      "size_bytes": 2041737
+    },
+    {
+      "local_name": "h02_test_predictions.jsonl",
+      "git_blob_sha": "1e3aaf7e3c1d8c6158189bf0b81c7f5839b08228",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/predictions.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/predictions.jsonl",
+      "sha256": "532133224725303c004beb828a73a6d677cb4f2f4cc8fe37893c63f33fae8a65",
+      "size_bytes": 5040290
+    },
+    {
+      "local_name": "h02_crossfit_audit.json",
+      "git_blob_sha": "42ab8357ce92c0e1fc65bdd02edf812a5185be43",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/crossfit_audit.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/crossfit_audit.json",
+      "sha256": "9f3dcec6b0dd745108dffcb5ee290925c04d7b85a765ec9fc2341d27d3756638",
+      "size_bytes": 8888387
+    },
+    {
+      "local_name": "h02_dev_summary.json",
+      "git_blob_sha": "66e40f9335011b1eb135ffc71d41a63fcad32646",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/summary.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/summary.json",
+      "sha256": "7ff0e0fe7df831f4aed43ce1e4071691f06ee0d4b3c5a76a264d53426077bfd9",
+      "size_bytes": 14804
+    },
+    {
+      "local_name": "h02_test_summary.json",
+      "git_blob_sha": "3ca8115af6f1e877b46267bb1918be1f045d24bf",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/summary.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/summary.json",
+      "sha256": "3b38db8bdde5a25cc3037794dab42a58ca5260801b86043ff3c5bf5dd7a95787",
+      "size_bytes": 16668
+    },
+    {
+      "local_name": "h02_dev_report.json",
+      "git_blob_sha": "8252e3e7612cf82b9a9b9c86431284c32bdec161",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/report.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/calibration/report.json",
+      "sha256": "5d3932b0ca861d431054c7659574abbdc70290008112b6e2454743e39ea54c85",
+      "size_bytes": 219131
+    },
+    {
+      "local_name": "h02_test_report.json",
+      "git_blob_sha": "0729afce69c61a18dc23fbe7a8df3b45fe91a6b9",
+      "path": "runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/report.json",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/domain/trial_1_20261005_213950/arms/H02_d05_staged/test/report.json",
+      "sha256": "2759ba097347be09a76747f8b8d557596119bc57e9cc8e2be827bab60636d546",
+      "size_bytes": 18305
+    },
+    {
+      "local_name": "c00_dev_scores.jsonl",
+      "git_blob_sha": "32edec5def5962fa4191b5f392ecdaba2cec1341",
+      "path": "runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/calibration/development_scores.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/calibration/development_scores.jsonl",
+      "sha256": "2b6279d37c1f90f1cde057cdf41298c622f3b4b276030feaf35f7d9896941448",
+      "size_bytes": 903435
+    },
+    {
+      "local_name": "d05_dev_scores.jsonl",
+      "git_blob_sha": "8fa6fe5f52dfd069cf037eaf5a8eb68fbea37acc",
+      "path": "runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/calibration/scores.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/calibration/scores.jsonl",
+      "sha256": "c5757a4d1c832880caba353699ef8f94442e9be0c9ed4847dd27b5afb5fd34c8",
+      "size_bytes": 1219880
+    },
+    {
+      "local_name": "d05_test_scores.jsonl",
+      "git_blob_sha": "9dae23c34b5a6a236839d0b8be4b33a7bd037105",
+      "path": "runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/test/scores.jsonl",
+      "source_url": "https://github.com/Jonathan-519/Openset/blob/abe3a982c4a6236cfbd57d7ca4169a6f5117950f/runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/test/scores.jsonl",
+      "sha256": "e1e4c581a67c81456a3f91ac90a725cd546a7840c7dbf0021a63d145e334d615",
+      "size_bytes": 3010874
+    }
+  ],
+  "historical_runtime": {
+    "torch": "1.12.1",
+    "cuda_build": "11.3",
+    "cuda_available": true,
+    "device": "cpu",
+    "device_count": 1,
+    "gpu_memory_bytes": null,
+    "python": "3.8.16"
+  },
+  "trained_weights": {
+    "tracked_in_original_git_tree": false,
+    "reference_checkpoint": {
+      "path": "runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/training/best.pth",
+      "sha256": "e4c39c378cb3685533ebc76658338b8aed09cc52662d8967cca113d14a279775"
+    },
+    "reference_support": {
+      "path": "runs/taxosafe_new/reference/trial_1_retrain_20261003_185220/training/support.pth",
+      "sha256": "bdb8ee6213d89260d0443d23ae48afc0a679049f5905c7eff174a8c759f1d89f"
+    },
+    "d05_checkpoint": {
+      "path": "runs/taxosafe_new/discovery/trial_1_20261005_175231/arms/D05_episode_bce/training/model.pth",
+      "sha256": "1f6fe81a909eb8c848bf5e7fd5e99568d3114cd5f9956c3826fdc96a86027a94"
+    }
+  },
+  "reference_source_signature": {
+    "config": "9278a14deb3f84f82d227d5e4f596d618ca6ea758a18ac19acdd728a5582fb94",
+    "hierarchy": "f7a49bea63f098492019bb6fd4113922aff047012e34b603bbf8eae3f69fe372",
+    "code": "7b6b7e02dc7b0181d93467e6d5c25bc1e42823d3d3c2c90088c28e8aa66b671b",
+    "known_preparation_audit": "4101f93cabc044a19666ee55eafdaf909e616d3e37545c13c244aad3494701bc",
+    "support_code": "77e239bed3c7a8c89d1fbcfaa8da0d097c202a26a68013dbeb644dba8f22faae",
+    "method": "support_reference_v3"
+  },
+  "reference_best_epoch": 50,
+  "d05_training_budget": {
+    "epochs": 100,
+    "seed": 1,
+    "batch_size": 1024,
+    "lr": 0.001,
+    "hidden": 32,
+    "evidence_dimension": 8,
+    "optimizer": "Adam",
+    "optimizer_steps": 12800,
+    "optimizer_steps_by_level": {
+      "leaf": 9900,
+      "parent": 2900
+    },
+    "normalization_fit": "TRAIN_episode_weighted_mean_std"
+  },
+  "preserved_dataset_metadata": {
+    "prepro/data/Zooplankton_TT_v11_dcbs/gt_train_known.txt": "dc52fadf97524426be784ca5e9b439f2bf3c9bb3e2dc9519106344ff4fd400d4",
+    "prepro/data/Zooplankton_TT_v11_dcbs/gt_val_known.txt": "579caf69e2675fad6bf9563896c3692d352daa2044d3248e2aa8ac6cc26c3950",
+    "prepro/data/Zooplankton_TT_v11_dcbs/known_deduplication.json": "4101f93cabc044a19666ee55eafdaf909e616d3e37545c13c244aad3494701bc",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_oe_train_v10.txt": "ffe74d39adeb6beb2faabd483d5de9c6f3e827a063d27d0ae0830d0ec157c5b4",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_extra.txt": "920b40099c755b052086a5651bb19df570044ae02699d62721e43a5097005742",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_intra.txt": "9d5e394bcc0699e02625febb87b8de86e1f92ba11bcd5242a9ca076c40186832",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt": "3abb75fe57433f214a35f241782bf3349ea4bf69ad5a3047f42a7b1bac45f198",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_intra_v10.txt": "39f07253a10509d0b6e768d90d4ee283bac2b74ce32320ab08a691815542ae45",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_known.txt": "7809028d6375adfacf0db0d78917311ce1237eb7df8c03839e21c86e64ce372e",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_reference.txt": "7809028d6375adfacf0db0d78917311ce1237eb7df8c03839e21c86e64ce372e",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra.txt": "4348a4e517730305eb46aec3f095cea09cb2441ef93b17aac5a3db1f512b67ed",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_extra_v10.txt": "fefc820386c7046cc7cea803f89a0438f4979458ad85b1932ad5620e47097e10",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra.txt": "7de4eeb005fa346b605254a5cc14fcf50f6b8d6ddae5030dc987535a2449a656",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_intra_v10.txt": "e6b99828ef109aa02eb70720640d3eb02bbe5e91d1983521816002296b28b33e",
+    "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_known.txt": "97aa9ff9ccb40ae239678bf6b8ceeb60783d4cd611d12324f0ff657139e55641",
+    "prepro/data/Zooplankton_TT_v9_rebuild/known_leaf_order.txt": "a933386dbca9ff55953ef82a690c441cd760a6df77073975a830bb6dd81b50c1",
+    "prepro/data/Zooplankton_TT_v9_rebuild/leaf_nodes.npy": "a62cb69f57b3d886beb59c4fe89a121d4a4a0002fe1606deb72f3b6232125a36",
+    "prepro/data/Zooplankton_TT_v9_rebuild/protocol.json": "9caccaf2484bcbe9d62d2db7ece954f95f6cae4586191f7e6b88b754765f1946",
+    "prepro/data/Zooplankton_TT_v9_rebuild/species_roles.json": "6791e0f1f1166d028cd1f006ada31d4e6ed07ad69d985d4d532392d0bbf9ac2f",
+    "prepro/data/Zooplankton_TT_v9_rebuild/split_statistics.json": "dd1bec6beb4a313740b12e381c682aecbfeaf1cfbdfcb3808bee9ed3726fc105",
+    "prepro/data/Zooplankton_TT_v9_rebuild/tree.npy": "f7a49bea63f098492019bb6fd4113922aff047012e34b603bbf8eae3f69fe372",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_oe_train.txt": "13267c3059e675892393c10cb91eb1f37dcba5188308a2bac3d4704d4ab4625d",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_test_extra.txt": "82d56b0aa581ffcdc8b48d7216b22d22435fb48f504e6de0184ce936c26c5004",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_test_intra.txt": "18ac1eb442add8e416a3d4a3c03bb6ef123f4295d4664570cf8a3ce530c5f779",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_test_known.txt": "fa35167763076758ac4c859a8810cd90d494ae8c04b547fee3e529cf3e1e9ae1",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_train_known.txt": "64d793f32258d0556ce464d512e4bd40c8101d9fa439887812abb20e829cbdad",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_val_extra.txt": "a25256c1946f8a21a479230a2cb6535538b5d12f7bf52af0a6c47ed7c79bb8da",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_val_intra.txt": "46e3b10950da93314699a8a37207df98a6777bb910548808d43c90871c6a2800",
+    "prepro/data/Zooplankton_Taxonomic_Tree/gt_val_known.txt": "6302d17074700aa4aa3e4f723c6dd1a0673ec7234c8d3e3576611da57e3cf01d",
+    "prepro/data/Zooplankton_Taxonomic_Tree/leaf_nodes.npy": "53af43b02ac94493753382b5ae680e66788b340a1c4036439362fe257712bf37",
+    "prepro/data/Zooplankton_Taxonomic_Tree/tree.npy": "cc72ac24addd0c84ca739e4df8310f15557da770c19adf177f88c084f2871914",
+    "prepro/splits/Zooplankton_Taxonomic_Tree/fold1.json": "c5b36276c3fa72be73614435aa6c7e0fcb436608f436916271cf4ff3c0e2f1b6",
+    "prepro/splits/Zooplankton_Taxonomic_Tree/fold1_test.json": "fe11c897126fdc36e7b3dc9cd3e435d013792a841a35e219f415d35c5115a773",
+    "prepro/splits/Zooplankton_Taxonomic_Tree/fold1_train.json": "360787f338a151d299a655874fded50a9ead978c529c2b6931c080a20cecd0e1",
+    "prepro/splits/Zooplankton_Taxonomic_Tree/fold1_val.json": "aef4010407f1ee31ee8ae8d66f085c17674e3239f4d986cf0085b6a5942486c3"
+  }
+}

@@ -1,0 +1,14 @@
+# Uses an immutable audited reference-v3 checkpoint/support/router.
+# No backbone training. All feature statistics and scales use known TRAIN only.
+# DEV outer folds are conditional postprocessor diagnostics; TEST is opt-in.
+name: TaxoSafe-Frozen-Reference-ParentRisk-v1
+seed: 1
+geometry:
+  shrinkage: 0.1
+  ridge: 0.0001
+calibration:
+  mode: combined
+  outer_folds: 4
+  inner_folds: 3
+  grid_points: 7
+  min_rule_sources: 2

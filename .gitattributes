@@ -1,0 +1,2 @@
+# Preserve the exact source and dataset bytes used by provenance signatures.
+* -text

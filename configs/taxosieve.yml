@@ -1,0 +1,19 @@
+# The single production method. Reference training parameters are in taxosieve_reference.yml.
+version: TaxoSieve_v1
+reference_config: configs/taxosieve_reference.yml
+d05:
+  seed: 1
+  folds: 3
+  epochs: 100
+  batch_size: 1024
+  lr: 0.001
+  shrinkage: 0.1
+  hidden: 32
+d05_calibration:
+  seed: 1
+  shrinkage: 20.0
+  min_parent_known: 5
+calibration:
+  seed: 1
+  root_known_target: 0.92
+  root_near_target: 0.85

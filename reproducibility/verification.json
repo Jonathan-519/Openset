@@ -1,0 +1,174 @@
+{
+  "schema_version": "h02_replay_verification_v1",
+  "passed": true,
+  "repository": "Jonathan-519/Openset",
+  "source_commit": "abe3a982c4a6236cfbd57d7ca4169a6f5117950f",
+  "validation_scope": "frozen_score_algorithm_replay; no image forward pass or training",
+  "image_forward_validated": false,
+  "training_validated": false,
+  "elapsed_seconds": 14.676,
+  "augmentation": {
+    "dev": {
+      "record_count": 376,
+      "exact": true
+    },
+    "test": {
+      "record_count": 927,
+      "exact": true
+    }
+  },
+  "complete_d05_router_exact": true,
+  "complete_h02_router_exact": true,
+  "complete_dev_fit_diagnostics_exact": true,
+  "thresholds": {
+    "root": 0.08034489303827286,
+    "leaf": 2.167559862136841
+  },
+  "hashes": {
+    "h02_router_sha256": "54e471b70bd20301ed8052fd2504fb0546457555791f8cacc37743b019396e57",
+    "root_state_sha256": "3e4863761bef20747f3afa86f6d52739700863b97bee28beceed3492e5533ffe",
+    "d05_router_sha256": "bb407782d3a226da3864293936f5d8128a9e5c2ab02aa495ec01f24bd406eb8f",
+    "reference_calibration_sha256": "f1e02989aacdeee201e874d9339631071356abb575f6560b9447186af4c9db33"
+  },
+  "stages": {
+    "dev": {
+      "record_count": 376,
+      "unique_image_count": 376,
+      "duplicate_record_count": 0,
+      "complete_prediction_records_exact": true,
+      "counts": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 199,
+        "intra_correct": 48,
+        "extra_correct": 38,
+        "leaf_outputs": 216
+      },
+      "metrics": {
+        "known_end_to_end_leaf_accuracy": 0.908675799086758,
+        "intra_correct_fallback_rate": 0.6956521739130435,
+        "extra_global_unknown_recall": 0.4318181818181818,
+        "open_world_accepted_leaf_precision": 0.9212962962962963
+      },
+      "targets_passed": false
+    },
+    "test": {
+      "record_count": 927,
+      "unique_image_count": 926,
+      "duplicate_record_count": 1,
+      "complete_prediction_records_exact": true,
+      "counts": {
+        "known": 450,
+        "intra": 204,
+        "extra": 272,
+        "known_correct": 406,
+        "intra_correct": 151,
+        "extra_correct": 165,
+        "leaf_outputs": 472
+      },
+      "metrics": {
+        "known_end_to_end_leaf_accuracy": 0.9022222222222223,
+        "intra_correct_fallback_rate": 0.7401960784313726,
+        "extra_global_unknown_recall": 0.6066176470588235,
+        "open_world_accepted_leaf_precision": 0.8601694915254238
+      },
+      "targets_passed": false
+    }
+  },
+  "oof": {
+    "complete_report_exact": true,
+    "fold_count": 11,
+    "evaluated_image_count": 376,
+    "every_image_held_once": true,
+    "fit_held_disjoint": true,
+    "all_three_routers_fit_only": true,
+    "counts": {
+      "reference": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 189,
+        "intra_correct": 29,
+        "extra_correct": 68,
+        "leaf_outputs": 224
+      },
+      "selected": {
+        "known": 219,
+        "intra": 69,
+        "extra": 88,
+        "known_correct": 197,
+        "intra_correct": 44,
+        "extra_correct": 38,
+        "leaf_outputs": 216
+      }
+    },
+    "d05_counts": {
+      "known": 219,
+      "intra": 69,
+      "extra": 88,
+      "known_correct": 196,
+      "intra_correct": 45,
+      "extra_correct": 58,
+      "leaf_outputs": 211
+    },
+    "historical_gates_passed": false,
+    "historical_recovery_passed": false
+  },
+  "verified_input_count": 16,
+  "verified_input_bytes": 27912769,
+  "input_receipts": "h02_expected.json lists fixed source URLs, Git blob hashes, SHA256 and byte counts.",
+  "reproduce_command": "python tools/verify_h02_replay.py --golden-dir /path/to/h02_golden --output /path/to/verification.json",
+  "regression_suite": {
+    "command": "python -m unittest discover -s tests -p 'test_*.py' -v",
+    "tests_passed": 57,
+    "seconds": 28.312,
+    "post_metadata_change_pipeline_tests_passed": 12,
+    "all_passed": true,
+    "reference_equivalence": {
+      "snapshot_groups": 17,
+      "bitwise_equal_tensors": 642,
+      "bitwise_equal_numpy_arrays": 1,
+      "equal_scalars_and_strings": 1322
+    },
+    "synthetic_lifecycle": {
+      "native_h02": true,
+      "reference_train_calibrate_test": true,
+      "test_isolation_and_artifact_corruption_checks": true
+    },
+    "real_image_training_executed": false,
+    "cuda_available": false
+  },
+  "repository_cleanup": {
+    "original_files": 6514,
+    "raw_files_preserved": 3157,
+    "raw_bytes_preserved": 1228733165,
+    "runs_files_removed": 2771,
+    "runs_bytes_removed": 3523536707,
+    "local_files": 572,
+    "final_files": 3729,
+    "main_python_files": 60,
+    "archived_python_files": 399,
+    "archived_files": 457,
+    "new_blobs_needed": 65,
+    "original_checkpoint_files": 0,
+    "archive_all_python_yaml_shell_bytes_preserved": true,
+    "data_split_metadata_files_byte_identical": 35,
+    "python38_syntax_checked_files": 461
+  },
+  "validated_runtime": {
+    "python": "3.12.14",
+    "torch": "2.14.1",
+    "torchvision": "0.29.1",
+    "numpy": "2.3.5",
+    "Pillow": "12.3.0",
+    "PyYAML": "6.0.3",
+    "scipy": "1.17.0",
+    "scikit-learn": "1.8.0",
+    "ftfy": "6.3.1",
+    "regex": "2026.9.29",
+    "tqdm": "4.70.1",
+    "packaging": "26.3"
+  },
+  "native_h02_code_sha256": "a96415807798d5649ba88bd9b6935e7889d38b725200a1deb2b20402b98aee72"
+}

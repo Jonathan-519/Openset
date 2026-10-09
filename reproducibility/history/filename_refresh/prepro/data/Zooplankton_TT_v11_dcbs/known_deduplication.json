@@ -1,0 +1,170 @@
+{
+  "schema_version": 11,
+  "operation": "known_image_identity_only",
+  "unknown_images_read": false,
+  "test_known_used_only_for_identity_audit": true,
+  "locked_test_manifest_changed": false,
+  "inputs": {
+    "train": {
+      "manifest": "prepro/data/Zooplankton_TT_v9_rebuild/gt_train_known.txt",
+      "sha256": "7809028d6375adfacf0db0d78917311ce1237eb7df8c03839e21c86e64ce372e"
+    },
+    "val_known": {
+      "manifest": "prepro/data/Zooplankton_TT_v9_rebuild/gt_val_known.txt",
+      "sha256": "97aa9ff9ccb40ae239678bf6b8ceeb60783d4cd611d12324f0ff657139e55641"
+    },
+    "test_known": {
+      "manifest": "prepro/data/Zooplankton_TT_v9_rebuild/gt_test_known.txt",
+      "sha256": "3abb75fe57433f214a35f241782bf3349ea4bf69ad5a3047f42a7b1bac45f198"
+    }
+  },
+  "original_counts": {
+    "train": 1628,
+    "val_known": 220,
+    "test_known": 451
+  },
+  "retained_counts": {
+    "train": 1610,
+    "val_known": 219,
+    "test_known": 451
+  },
+  "unique_test_known_images": 450,
+  "validation_labels_without_independent_images": [
+    5
+  ],
+  "removed_fitting_rows": [
+    {
+      "split": "val_known",
+      "path": "Copepoda/Calanopia_thompsoni/680.jpg",
+      "sha256": "a193953b1bac755f1d1de7494f660d55d5cfd545f834c1d019cf220fbd1c11a1",
+      "same_as_split": "test_known",
+      "same_as_path": "Copepoda/Calanopia_thompsoni/677.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/493.jpg",
+      "sha256": "d4c46bdb3d6cdf92788288e30a74c8ffd6cafe51aa6f59abb7d5ac9c25f3ba5d",
+      "same_as_split": "test_known",
+      "same_as_path": "Copepoda/Acartia_hongi/524.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/498.jpg",
+      "sha256": "69277dd8fb2801526493fa7dc67a18cf8b2932f6eb5de7baee5840d2e014d33a",
+      "same_as_split": "train",
+      "same_as_path": "Copepoda/Acartia_hongi/537.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/497.jpg",
+      "sha256": "34675535223c7db0b90ba6db9751f817b931e510705b08fbc250fccb9561c422",
+      "same_as_split": "val_known",
+      "same_as_path": "Copepoda/Acartia_hongi/532.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/496.jpg",
+      "sha256": "dbaa7bde896597a58d4c2dde3b665b4fa38fe4c5349c5c1709e4b828c1d04d6f",
+      "same_as_split": "test_known",
+      "same_as_path": "Copepoda/Acartia_hongi/526.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/517.jpg",
+      "sha256": "ade775143319da9653721b3e12c96378298bb8eb05572906194a91052bd30664",
+      "same_as_split": "train",
+      "same_as_path": "Copepoda/Acartia_hongi/491.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/523.jpg",
+      "sha256": "d2463953d7c4c8211d7f0a1558b7aab16410416ed25945118ed74e6f4995329c",
+      "same_as_split": "test_known",
+      "same_as_path": "Copepoda/Acartia_hongi/492.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Acartia_hongi/525.jpg",
+      "sha256": "561fe74cd7b78353ebb94515ac7b0c9822d2fcd7ca4fe53dbce8646c53c90d53",
+      "same_as_split": "val_known",
+      "same_as_path": "Copepoda/Acartia_hongi/494.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Copepoda/Calanopia_thompsoni/678.jpg",
+      "sha256": "2140ac238175cf0f0cdbe26c2e67df8b5a8256f997ac2e9d9d9fa7da99c206ec",
+      "same_as_split": "train",
+      "same_as_path": "Copepoda/Calanopia_thompsoni/679.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2423.jpg",
+      "sha256": "64f56d25fcb5534b1af93a1980ece5d0c47e480816bab0c5a9d1b785149f9c3a",
+      "same_as_split": "val_known",
+      "same_as_path": "Sagittoidea/Sagitta/2436.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2414.jpg",
+      "sha256": "59c803755371f1fe43fac3dec16856ab5a05981ec732d867407b862300af9e66",
+      "same_as_split": "test_known",
+      "same_as_path": "Sagittoidea/Sagitta/2415.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2418.jpg",
+      "sha256": "e599efd34201c9089aeafd403b82c2b07d66d37715d5601136b082015f9837ba",
+      "same_as_split": "train",
+      "same_as_path": "Sagittoidea/Sagitta/2427.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2442.jpg",
+      "sha256": "19862f7efb1122d24324929ad815a904978e327a2ea3329b1c3bd27522e8c072",
+      "same_as_split": "test_known",
+      "same_as_path": "Sagittoidea/Sagitta/2416.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2444.jpg",
+      "sha256": "dc50e9e993c58e485b171f2b2757466de37051e53e838081480172ed0f47f2cb",
+      "same_as_split": "train",
+      "same_as_path": "Sagittoidea/Sagitta/2417.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2425.jpg",
+      "sha256": "38c5a5300ce85750498b9a5f28c874aabd05a972b557fac8e85204dbc241b273",
+      "same_as_split": "test_known",
+      "same_as_path": "Sagittoidea/Sagitta/2440.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2433.jpg",
+      "sha256": "d65ec48d9e640a4d482f7114fc94ad9e41579b3a859369c17cf95643bcda0948",
+      "same_as_split": "test_known",
+      "same_as_path": "Sagittoidea/Sagitta/2421.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2422.jpg",
+      "sha256": "6331979378ff691141e5e8dcb11f3a16005144d9e07ca42f5f42809dbacd5a80",
+      "same_as_split": "train",
+      "same_as_path": "Sagittoidea/Sagitta/2435.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2420.jpg",
+      "sha256": "5eca79615117dc669ebf3f3c766fd93b02a34f6c8b0dbf6704190210f4007dea",
+      "same_as_split": "train",
+      "same_as_path": "Sagittoidea/Sagitta/2431.jpg"
+    },
+    {
+      "split": "train",
+      "path": "Sagittoidea/Sagitta/2429.jpg",
+      "sha256": "57b4172fe2b1287547f1a9eab875abf22ebee96bd3b155435414a4f87f8dcba1",
+      "same_as_split": "test_known",
+      "same_as_path": "Sagittoidea/Sagitta/2419.jpg"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "protocol_version": "taxosafe_v9_rebuild_v1",
+  "protocol_seed": 2026,
+  "known_split": {
+    "train": 0.7,
+    "val": 0.1,
+    "test": 0.2,
+    "min_val": 1,
+    "min_test": 2
+  },
+  "near_unknown": {
+    "locked_test_species": {
+      "Copepoda": [
+        "Corycaeus_affinis",
+        "Oithona_plumifera",
+        "Tortanus_derjugini"
+      ],
+      "Medusae": [
+        "Gonionemus_vertens",
+        "Turritopsis_nutricula"
+      ]
+    },
+    "dev_species": {
+      "Copepoda": [
+        "Acartia_pacifica",
+        "Centropages_tenuiremis"
+      ],
+      "Medusae": [
+        "Sugiura_chengshanense",
+        "Zanclea_costata"
+      ]
+    },
+    "policy": "copepoda_2 + medusae_2, random once then frozen"
+  },
+  "global_ood": {
+    "dev_classes": [
+      "Alima_larva",
+      "Brachyura_zoea_larva",
+      "Polychaeta_larva",
+      "Tornaria_larva"
+    ],
+    "test_classes": [
+      "Enteromorphaprolifra",
+      "Fish_eggs",
+      "Fish_larva",
+      "Megalopa_larva",
+      "Ophioplutues_larva",
+      "Porcellana_zoea_larva"
+    ],
+    "policy": "4 dev + 6 test, category-disjoint, random once then frozen",
+    "oe_training": false
+  },
+  "roots": {
+    "known_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_TT",
+    "near_dev_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_NearUnknown_Dev",
+    "near_test_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_NearUnknown_Test",
+    "ood_dev_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_OOD_Dev",
+    "ood_test_root": "/home/ubuntu/hdd/data/qz/Openset/prepro/raw/Zooplankton_OOD_Test",
+    "data_out": "/home/ubuntu/hdd/data/qz/Openset/prepro/data/Zooplankton_TT_v9_rebuild"
+  }
+}
